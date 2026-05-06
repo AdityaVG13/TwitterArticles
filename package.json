@@ -25,6 +25,7 @@
   "scripts": {
     "start": "node src/server.mjs",
     "dev": "node --watch src/server.mjs",
+    "doctor": "node src/doctor.mjs",
     "login": "node src/login.mjs",
     "install-native": "node src/install-native.mjs",
     "uninstall-native": "node src/uninstall-native.mjs",

@@ -26,6 +26,7 @@ Use the web UI or CLI for pasted URLs. Use the browser extension for one-click e
 
 ```sh
 npm install
+npm run doctor
 ```
 
 Install Browser Harness if needed:
