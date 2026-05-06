@@ -1,10 +1,10 @@
 const DEFAULT_OPTIONS = {
-  serverOrigin: 'http://127.0.0.1:4512',
-  serverMode: 'native',
-  formats: ['md'],
-  zip: true
+  serverOrigin: "http://127.0.0.1:4512",
+  serverMode: "native",
+  formats: ["md"],
+  zip: true,
 };
-const NATIVE_HOST_NAME = 'org.x_article_downloader.native_host';
+const NATIVE_HOST_NAME = "org.x_article_downloader.native_host";
 
 let nativePort = null;
 let nativeRequestId = 0;
@@ -34,35 +34,37 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 chrome.action.onClicked.addListener(async (tab) => {
-  await setBadge('...');
+  await setBadge("...");
   try {
-    if (!tab.id || !isXUrl(tab.url || '')) {
-      throw new Error('Open an x.com Article/status tab first.');
+    if (!tab.id || !isXUrl(tab.url || "")) {
+      throw new Error("Open an x.com Article/status tab first.");
     }
 
     const options = await getOptions();
     const serverOrigin = await ensureServer(options);
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ['content/extract-page.js']
+      files: ["content/extract-page.js"],
     });
     const [capture] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => globalThis.__xadExtractPage()
+      func: () => globalThis.__xadExtractPage(),
     });
 
     if (!capture?.result?.ok) {
-      throw new Error(capture?.result?.error || 'Could not capture page content.');
+      throw new Error(
+        capture?.result?.error || "Could not capture page content."
+      );
     }
 
     const response = await fetch(`${serverOrigin}/api/save-capture`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      method: "POST",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({
         article: capture.result.article,
         formats: options.formats,
-        zip: options.zip
-      })
+        zip: options.zip,
+      }),
     });
     const result = await response.json();
     if (!response.ok || !result.ok) {
@@ -75,89 +77,104 @@ chrome.action.onClicked.addListener(async (tab) => {
       await chrome.downloads.download({
         url: absoluteUrl,
         filename: file.name,
-        saveAs: false
+        saveAs: false,
       });
     }
-    await setBadge('OK');
+    await setBadge("OK");
   } catch (error) {
     console.error(error);
-    await setBadge('ERR');
+    await setBadge("ERR");
     await chrome.storage.local.set({ lastError: error.message });
     await chrome.runtime.openOptionsPage();
   } finally {
-    setTimeout(() => setBadge(''), 2500);
+    setTimeout(() => setBadge(""), 2500);
   }
 });
 
 async function getOptions() {
   const stored = await chrome.storage.sync.get(DEFAULT_OPTIONS);
   return {
-    serverOrigin: String(stored.serverOrigin || DEFAULT_OPTIONS.serverOrigin).replace(/\/$/, ''),
+    serverOrigin: String(
+      stored.serverOrigin || DEFAULT_OPTIONS.serverOrigin
+    ).replace(/\/$/, ""),
     serverMode: stored.serverMode || DEFAULT_OPTIONS.serverMode,
-    formats: Array.isArray(stored.formats) && stored.formats.length ? stored.formats : DEFAULT_OPTIONS.formats,
-    zip: stored.zip !== false
+    formats:
+      Array.isArray(stored.formats) && stored.formats.length
+        ? stored.formats
+        : DEFAULT_OPTIONS.formats,
+    zip: stored.zip !== false,
   };
 }
 
 async function ensureServer(options = null) {
-  const resolved = options || await getOptions();
-  if (resolved.serverMode === 'manual') {
+  const resolved = options || (await getOptions());
+  if (resolved.serverMode === "manual") {
     return resolved.serverOrigin;
   }
 
   const url = new URL(resolved.serverOrigin);
-  const response = await nativeRequest({
-    type: 'ensureStarted',
-    origin: resolved.serverOrigin,
-    port: Number(url.port || 80)
-  }, 20000);
+  const response = await nativeRequest(
+    {
+      type: "ensureStarted",
+      origin: resolved.serverOrigin,
+      port: Number(url.port || 80),
+    },
+    20000
+  );
 
   if (!response.ok) {
-    throw new Error(response.error || 'Native host could not start the server.');
+    throw new Error(
+      response.error || "Native host could not start the server."
+    );
   }
 
-  await chrome.storage.local.remove('lastError');
+  await chrome.storage.local.remove("lastError");
   return response.origin || resolved.serverOrigin;
 }
 
 async function keepServerAlive() {
   const options = await getOptions();
-  if (options.serverMode === 'manual') {
+  if (options.serverMode === "manual") {
     return { ok: true, manual: true };
   }
 
   return {
     ok: true,
-    origin: await ensureServer(options)
+    origin: await ensureServer(options),
   };
 }
 
 async function handleRuntimeMessage(message) {
-  if (message?.type === 'server:start') {
+  if (message?.type === "server:start") {
     return keepServerAlive();
   }
 
-  if (message?.type === 'server:status') {
+  if (message?.type === "server:status") {
     const options = await getOptions();
-    if (options.serverMode === 'manual') {
+    if (options.serverMode === "manual") {
       const response = await fetch(`${options.serverOrigin}/health`);
       return { ok: response.ok, manual: true, server: await response.json() };
     }
 
-    const response = await nativeRequest({ type: 'status', origin: options.serverOrigin }, 5000);
+    const response = await nativeRequest(
+      { type: "status", origin: options.serverOrigin },
+      5000
+    );
     return {
       ...response,
-      running: Boolean(response.server)
+      running: Boolean(response.server),
     };
   }
 
-  if (message?.type === 'server:stop') {
-    const response = await nativeRequest({ type: 'stop' }, 5000).catch((error) => ({ ok: false, error: error.message }));
+  if (message?.type === "server:stop") {
+    const response = await nativeRequest({ type: "stop" }, 5000).catch(
+      (error) => ({ ok: false, error: error.message })
+    );
     disconnectNativeHost();
     return response;
   }
 
-  throw new Error(`Unknown message: ${message?.type || 'missing type'}`);
+  throw new Error(`Unknown message: ${message?.type || "missing type"}`);
 }
 
 function connectNativeHost() {
@@ -177,7 +194,8 @@ function connectNativeHost() {
     pending.resolve(message);
   });
   nativePort.onDisconnect.addListener(() => {
-    const error = chrome.runtime.lastError?.message || 'Native host disconnected.';
+    const error =
+      chrome.runtime.lastError?.message || "Native host disconnected.";
     const pending = [...nativeRequests.values()];
     nativeRequests = new Map();
     nativePort = null;
@@ -196,7 +214,11 @@ function nativeRequest(message, timeoutMs) {
     const id = `${Date.now()}-${++nativeRequestId}`;
     const timeout = setTimeout(() => {
       nativeRequests.delete(id);
-      reject(new Error('Native host timed out. Run `npm run install-native`, then reload the extension.'));
+      reject(
+        new Error(
+          "Native host timed out. Run `npm run install-native`, then reload the extension."
+        )
+      );
     }, timeoutMs);
 
     nativeRequests.set(id, { resolve, reject, timeout });
@@ -224,8 +246,12 @@ function rememberNativeError(error) {
 function isXUrl(value) {
   try {
     const url = new URL(value);
-    const host = url.hostname.replace(/^www\./, '');
-    return host === 'x.com' || host === 'twitter.com' || host === 'mobile.twitter.com';
+    const host = url.hostname.replace(/^www\./, "");
+    return (
+      host === "x.com" ||
+      host === "twitter.com" ||
+      host === "mobile.twitter.com"
+    );
   } catch {
     return false;
   }
@@ -233,5 +259,7 @@ function isXUrl(value) {
 
 async function setBadge(text) {
   await chrome.action.setBadgeText({ text });
-  await chrome.action.setBadgeBackgroundColor({ color: text === 'ERR' ? '#9f1d2f' : '#005f73' });
+  await chrome.action.setBadgeBackgroundColor({
+    color: text === "ERR" ? "#9f1d2f" : "#005f73",
+  });
 }

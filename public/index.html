@@ -1,39 +1,53 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>X Article Downloader</title>
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-  <main class="shell">
-    <header class="topbar">
-      <div>
-        <h1>X Article Downloader</h1>
-        <p>Paste X Article URLs. Export Markdown, PDF, DOCX, or a zip.</p>
-      </div>
-      <a id="bookmarklet" class="bookmarklet" href="#">Bookmarklet</a>
-    </header>
-
-    <section class="panel">
-      <form id="downloadForm">
-        <label for="urls">URLs</label>
-        <textarea id="urls" name="urls" rows="10" placeholder="https://x.com/user/status/1234567890"></textarea>
-
-        <div class="controls">
-          <label class="check"><input type="checkbox" name="formats" value="md" checked> Markdown</label>
-          <label class="check"><input type="checkbox" name="formats" value="pdf"> PDF</label>
-          <label class="check"><input type="checkbox" name="formats" value="docx"> DOCX</label>
-          <label class="check"><input type="checkbox" name="zip" checked> Zip batch</label>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>X Article Downloader</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>X Article Downloader</h1>
+          <p>Paste X Article URLs. Export Markdown, PDF, DOCX, or a zip.</p>
         </div>
+        <a id="bookmarklet" class="bookmarklet" href="#">Bookmarklet</a>
+      </header>
 
-        <button type="submit" id="submitButton">Download</button>
-      </form>
-    </section>
+      <section class="panel">
+        <form id="downloadForm">
+          <label for="urls">URLs</label>
+          <textarea
+            id="urls"
+            name="urls"
+            rows="10"
+            placeholder="https://x.com/user/status/1234567890"
+          ></textarea>
 
-    <section id="status" class="status" aria-live="polite"></section>
-  </main>
-  <script src="/app.js" type="module"></script>
-</body>
+          <div class="controls">
+            <label class="check"
+              ><input type="checkbox" name="formats" value="md" checked />
+              Markdown</label
+            >
+            <label class="check"
+              ><input type="checkbox" name="formats" value="pdf" /> PDF</label
+            >
+            <label class="check"
+              ><input type="checkbox" name="formats" value="docx" /> DOCX</label
+            >
+            <label class="check"
+              ><input type="checkbox" name="zip" checked /> Zip batch</label
+            >
+          </div>
+
+          <button type="submit" id="submitButton">Download</button>
+        </form>
+      </section>
+
+      <section id="status" class="status" aria-live="polite"></section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
 </html>

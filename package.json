@@ -13,6 +13,8 @@
     "public",
     "scripts",
     "src",
+    "CONTEXT.md",
+    ".env.example",
     "README.md",
     "LICENSE"
   ],
@@ -25,9 +27,12 @@
     "login": "node src/login.mjs",
     "install-native": "node src/install-native.mjs",
     "uninstall-native": "node src/uninstall-native.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "check": "node --check src/*.mjs native-host/*.mjs extension/*.js extension/content/*.js test/*.mjs",
     "test": "node --test test/*.test.mjs",
-    "test:pdf": "XAD_TEST_PDF=1 node --test test/exporters.test.mjs"
+    "test:pdf": "XAD_TEST_PDF=1 node --test test/exporters.test.mjs",
+    "prepare": "husky"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
@@ -38,5 +43,10 @@
     "playwright": "^1.49.1",
     "sanitize-filename": "^1.6.3",
     "turndown": "^7.2.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.3"
   }
 }

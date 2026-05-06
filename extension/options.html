@@ -1,46 +1,66 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>X Article Downloader Options</title>
-  <link rel="stylesheet" href="options.css">
-</head>
-<body>
-  <main>
-    <h1>X Article Downloader</h1>
-    <form id="optionsForm">
-      <label for="serverOrigin">Local server</label>
-      <input id="serverOrigin" name="serverOrigin" value="http://127.0.0.1:4512">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>X Article Downloader Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>X Article Downloader</h1>
+      <form id="optionsForm">
+        <label for="serverOrigin">Local server</label>
+        <input
+          id="serverOrigin"
+          name="serverOrigin"
+          value="http://127.0.0.1:4512"
+        />
 
-      <fieldset>
-        <legend>Server lifecycle</legend>
-        <label><input type="radio" name="serverMode" value="native"> Auto start/stop with extension</label>
-        <label><input type="radio" name="serverMode" value="manual"> Manual server</label>
-      </fieldset>
+        <fieldset>
+          <legend>Server lifecycle</legend>
+          <label
+            ><input type="radio" name="serverMode" value="native" /> Auto
+            start/stop with extension</label
+          >
+          <label
+            ><input type="radio" name="serverMode" value="manual" /> Manual
+            server</label
+          >
+        </fieldset>
 
-      <fieldset>
-        <legend>Formats</legend>
-        <label><input type="checkbox" name="formats" value="md"> Markdown</label>
-        <label><input type="checkbox" name="formats" value="pdf"> PDF</label>
-        <label><input type="checkbox" name="formats" value="docx"> DOCX</label>
-      </fieldset>
+        <fieldset>
+          <legend>Formats</legend>
+          <label
+            ><input type="checkbox" name="formats" value="md" /> Markdown</label
+          >
+          <label
+            ><input type="checkbox" name="formats" value="pdf" /> PDF</label
+          >
+          <label
+            ><input type="checkbox" name="formats" value="docx" /> DOCX</label
+          >
+        </fieldset>
 
-      <label class="inline"><input type="checkbox" name="zip"> Zip multiple files</label>
-      <div class="actions">
-        <button type="submit">Save</button>
-        <button type="button" id="startServer">Start Server</button>
-        <button type="button" id="testServer">Test Server</button>
-        <button type="button" id="stopServer">Stop Server</button>
-      </div>
-    </form>
-    <pre id="installHelp">First setup:
+        <label class="inline"
+          ><input type="checkbox" name="zip" /> Zip multiple files</label
+        >
+        <div class="actions">
+          <button type="submit">Save</button>
+          <button type="button" id="startServer">Start Server</button>
+          <button type="button" id="testServer">Test Server</button>
+          <button type="button" id="stopServer">Stop Server</button>
+        </div>
+      </form>
+      <pre id="installHelp">
+First setup:
 npm install
 npm run install-native
 
-Then reload the unpacked extension.</pre>
-    <p id="status" aria-live="polite"></p>
-  </main>
-  <script src="options.js" type="module"></script>
-</body>
+Then reload the unpacked extension.</pre
+      >
+      <p id="status" aria-live="polite"></p>
+    </main>
+    <script src="options.js" type="module"></script>
+  </body>
 </html>

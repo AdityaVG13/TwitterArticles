@@ -1,9 +1,10 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
-import { extractArticleFromHtml } from '../src/extractor.mjs';
+import assert from "node:assert/strict";
+import test from "node:test";
+import { extractArticleFromHtml } from "../src/extractor.mjs";
 
-test('extractArticleFromHtml reads article metadata and content', () => {
-  const article = extractArticleFromHtml(`
+test("extractArticleFromHtml reads article metadata and content", () => {
+  const article = extractArticleFromHtml(
+    `
     <!doctype html>
     <html>
       <head>
@@ -22,16 +23,25 @@ test('extractArticleFromHtml reads article metadata and content', () => {
         </main>
       </body>
     </html>
-  `, 'https://x.com/example_user/status/123');
+  `,
+    "https://x.com/example_user/status/123"
+  );
 
-  assert.equal(article.title, 'The Useful Article');
-  assert.equal(article.sourceUrl, 'https://x.com/example_user/status/123');
+  assert.equal(article.title, "The Useful Article");
+  assert.equal(article.sourceUrl, "https://x.com/example_user/status/123");
   assert.match(article.content, /long enough paragraph/);
   assert.match(article.textContent, /second paragraph/);
 });
 
-test('extractArticleFromHtml reports login walls', () => {
-  assert.throws(() => extractArticleFromHtml(`
+test("extractArticleFromHtml reports login walls", () => {
+  assert.throws(
+    () =>
+      extractArticleFromHtml(
+        `
     <html><head><title>X</title></head><body><main>Log in Sign up Don't miss what's happening</main></body></html>
-  `, 'https://x.com/example_user/status/123'), /login/);
+  `,
+        "https://x.com/example_user/status/123"
+      ),
+    /login/
+  );
 });

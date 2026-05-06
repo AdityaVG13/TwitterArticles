@@ -1,30 +1,37 @@
 #!/usr/bin/env node
-import path from 'node:path';
-import { mkdir } from 'node:fs/promises';
-import { createBrowserContext, extractArticleWithContext } from './extractor.mjs';
-import { saveArticleFiles, zipFiles } from './exporters.mjs';
-import { normalizeSourceUrl, parseFormats, parseUrlInput } from './url.mjs';
+import path from "node:path";
+import { mkdir } from "node:fs/promises";
+import {
+  createBrowserContext,
+  extractArticleWithContext,
+} from "./extractor.mjs";
+import { saveArticleFiles, zipFiles } from "./exporters.mjs";
+import { normalizeSourceUrl, parseFormats, parseUrlInput } from "./url.mjs";
 
 const args = process.argv.slice(2);
 const options = {
-  formats: ['md'],
-  outputDir: path.resolve(process.cwd(), 'downloads', new Date().toISOString().replace(/[:.]/g, '-')),
+  formats: ["md"],
+  outputDir: path.resolve(
+    process.cwd(),
+    "downloads",
+    new Date().toISOString().replace(/[:.]/g, "-")
+  ),
   zip: false,
   headful: false,
-  urls: []
+  urls: [],
 };
 
 for (let index = 0; index < args.length; index += 1) {
   const arg = args[index];
-  if (arg === '--format' || arg === '--formats') {
+  if (arg === "--format" || arg === "--formats") {
     options.formats = parseFormats(args[++index]);
-  } else if (arg === '--out' || arg === '--output') {
+  } else if (arg === "--out" || arg === "--output") {
     options.outputDir = path.resolve(args[++index]);
-  } else if (arg === '--zip') {
+  } else if (arg === "--zip") {
     options.zip = true;
-  } else if (arg === '--headful') {
+  } else if (arg === "--headful") {
     options.headful = true;
-  } else if (arg === '--help' || arg === '-h') {
+  } else if (arg === "--help" || arg === "-h") {
     printHelp();
     process.exit(0);
   } else {
@@ -47,7 +54,11 @@ try {
   for (const url of urls) {
     try {
       const article = await extractArticleWithContext(context, url);
-      const saved = await saveArticleFiles(article, options.formats, options.outputDir);
+      const saved = await saveArticleFiles(
+        article,
+        options.formats,
+        options.outputDir
+      );
       files.push(...saved);
       console.log(`OK ${article.title}`);
     } catch (error) {
@@ -60,7 +71,10 @@ try {
 }
 
 if (options.zip && files.length) {
-  const zip = await zipFiles(files, path.join(options.outputDir, 'x-articles.zip'));
+  const zip = await zipFiles(
+    files,
+    path.join(options.outputDir, "x-articles.zip")
+  );
   console.log(zip.path);
 } else {
   for (const file of files) {

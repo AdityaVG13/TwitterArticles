@@ -1,10 +1,11 @@
-import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { JSDOM } from 'jsdom';
-import test from 'node:test';
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { JSDOM } from "jsdom";
+import test from "node:test";
 
-test('extension content script captures an article-like page', async () => {
-  const dom = new JSDOM(`
+test("extension content script captures an article-like page", async () => {
+  const dom = new JSDOM(
+    `
     <!doctype html>
     <html>
       <head>
@@ -22,17 +23,22 @@ test('extension content script captures an article-like page', async () => {
         </main>
       </body>
     </html>
-  `, {
-    url: 'https://x.com/example_user/status/123',
-    runScripts: 'dangerously'
-  });
+  `,
+    {
+      url: "https://x.com/example_user/status/123",
+      runScripts: "dangerously",
+    }
+  );
 
-  const script = await readFile(new URL('../extension/content/extract-page.js', import.meta.url), 'utf8');
+  const script = await readFile(
+    new URL("../extension/content/extract-page.js", import.meta.url),
+    "utf8"
+  );
   dom.window.eval(script);
   const result = dom.window.__xadExtractPage();
 
   assert.equal(result.ok, true);
-  assert.equal(result.article.title, 'Extension Article');
+  assert.equal(result.article.title, "Extension Article");
   assert.match(result.article.content, /internal link/);
   assert.match(result.article.content, /https:\/\/x.com\/relative/);
 });
