@@ -1,0 +1,42 @@
+{
+  "name": "x-article-downloader",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Local X Article downloader for Markdown, PDF, and DOCX.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "extension",
+    "native-host",
+    "public",
+    "scripts",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "x-article-downloader": "./src/cli.mjs"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "node --watch src/server.mjs",
+    "login": "node src/login.mjs",
+    "install-native": "node src/install-native.mjs",
+    "uninstall-native": "node src/uninstall-native.mjs",
+    "check": "node --check src/*.mjs native-host/*.mjs extension/*.js extension/content/*.js test/*.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:pdf": "XAD_TEST_PDF=1 node --test test/exporters.test.mjs"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "archiver": "^7.0.1",
+    "docx": "^9.5.1",
+    "express": "^4.19.2",
+    "jsdom": "^25.0.1",
+    "playwright": "^1.49.1",
+    "sanitize-filename": "^1.6.3",
+    "turndown": "^7.2.0"
+  }
+}

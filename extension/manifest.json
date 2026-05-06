@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "X Article Downloader",
+  "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzq84nI7Rg0TnCa+d+SK/Ls/3fUGrirWO/+kmgErGUtQtL5BQEPeK/z4MxQjWt53+sS4OVFf2ohj+89ul9v9mmZHw4HVXK28Mr85Lsu+lriSoIDCpVL2Cymmh6BrObcorbYO+PJMwTUJ8agMfka5bmdqyo1DMPHYg/RAlWTMDSHYZ5nR8lQ1m/8l/Zsb+7czLaVgf4yEIjAV6dFqoI3/adkQsRj6HpvsewH4UpiS/Ho8tYRBNe4OQqKqn9F9s/GzpKORk7cokGkgJHm7lIbln++b3Y8h8A6llUCcwiUW1LksM0LCkr8C2vPnMBCen6oFh4hEm8k67XEyAGWDHLpEjRQIDAQAB",
+  "description": "One-click export of the current X Article to local Markdown, PDF, or DOCX.",
+  "action": {
+    "default_title": "Download X Article"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "options_page": "options.html",
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "nativeMessaging",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://twitter.com/*",
+    "https://mobile.twitter.com/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ]
+}
