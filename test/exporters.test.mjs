@@ -39,12 +39,30 @@ test("saveArticleFiles writes md and docx", async () => {
   try {
     const files = await saveArticleFiles(article, ["md", "docx"], dir);
     assert.equal(files.length, 2);
+    assert.deepEqual(
+      files.map((file) => file.name),
+      [
+        "Useful X Article - Example Author.md",
+        "Useful X Article - Example Author.docx",
+      ]
+    );
     assert(files.some((file) => file.name.endsWith(".md")));
     assert(files.some((file) => file.name.endsWith(".docx")));
 
     const markdownFile = files.find((file) => file.name.endsWith(".md"));
     const markdown = await readFile(markdownFile.path, "utf8");
     assert.match(markdown, /Useful X Article/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+test("saveArticleFiles avoids overwriting duplicate article names", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "xad-"));
+  try {
+    const first = await saveArticleFiles(article, ["md"], dir);
+    const second = await saveArticleFiles(article, ["md"], dir);
+    assert.equal(first[0].name, "Useful X Article - Example Author.md");
+    assert.equal(second[0].name, "Useful X Article - Example Author 2.md");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

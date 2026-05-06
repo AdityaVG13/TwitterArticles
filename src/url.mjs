@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import sanitize from "sanitize-filename";
 
 const TRAILING_PUNCTUATION = /[),.;\]]+$/;
@@ -48,17 +47,13 @@ export function normalizeSourceUrl(rawUrl, options = {}) {
 }
 
 export function fileStemForArticle(article) {
-  const title = sanitize(article.title || "x-article")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 86);
-  const hash = crypto
-    .createHash("sha1")
-    .update(article.sourceUrl || article.finalUrl || title)
-    .digest("hex")
-    .slice(0, 8);
-  return `${title || "x-article"}-${hash}`;
+  const title = cleanFilePart(article.title || "x-article", 96);
+  const author = cleanFilePart(
+    article.byline ||
+      authorFromUrl(article.sourceUrl || article.finalUrl || ""),
+    48
+  );
+  return [title || "x-article", author].filter(Boolean).join(" - ");
 }
 
 export function parseFormats(input) {
@@ -78,4 +73,23 @@ export function parseFormats(input) {
   }
 
   return unique.length ? unique : ["md"];
+}
+
+function authorFromUrl(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    const username = url.pathname.split("/").filter(Boolean)[0];
+    return username ? `@${username}` : "";
+  } catch {
+    return "";
+  }
+}
+
+function cleanFilePart(value, maxLength) {
+  return sanitize(String(value || ""))
+    .replace(/\s+/g, " ")
+    .replace(/\s+-\s+/g, " - ")
+    .trim()
+    .slice(0, maxLength)
+    .trim();
 }

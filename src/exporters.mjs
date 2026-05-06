@@ -122,7 +122,7 @@ export async function saveArticleFiles(
   const files = [];
 
   for (const format of formats) {
-    const filePath = path.join(outputDir, `${stem}.${format}`);
+    const filePath = await uniqueFilePath(outputDir, stem, format);
     if (format === "md") {
       await writeFile(filePath, renderMarkdown(article), "utf8");
     } else if (format === "pdf") {
@@ -143,6 +143,26 @@ export async function saveArticleFiles(
   }
 
   return files;
+}
+
+async function uniqueFilePath(outputDir, stem, extension) {
+  let candidate = path.join(outputDir, `${stem}.${extension}`);
+  for (let index = 2; await pathExists(candidate); index += 1) {
+    candidate = path.join(outputDir, `${stem} ${index}.${extension}`);
+  }
+  return candidate;
+}
+
+async function pathExists(filePath) {
+  try {
+    await stat(filePath);
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
 }
 
 export async function writePdf(article, filePath, options = {}) {

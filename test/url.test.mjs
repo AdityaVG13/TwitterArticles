@@ -35,10 +35,19 @@ test("parseFormats validates export formats", () => {
   assert.throws(() => parseFormats("html"), /Unsupported format/);
 });
 
-test("fileStemForArticle is stable and filesystem safe", () => {
+test("fileStemForArticle uses article title and author", () => {
   const stem = fileStemForArticle({
     title: "A/B: Useful Article?",
+    byline: "Example Author",
     sourceUrl: "https://x.com/a/status/1",
   });
-  assert.match(stem, /^AB-Useful-Article-[a-f0-9]{8}$/);
+  assert.equal(stem, "AB Useful Article - Example Author");
+});
+
+test("fileStemForArticle falls back to X username when byline is missing", () => {
+  const stem = fileStemForArticle({
+    title: "Useful Article",
+    sourceUrl: "https://x.com/example_user/status/1",
+  });
+  assert.equal(stem, "Useful Article - @example_user");
 });
