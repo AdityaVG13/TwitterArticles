@@ -6,6 +6,20 @@ The app runs locally. It does not send article content to a third-party service.
 
 Use the web UI or CLI for pasted URLs. Use the browser extension for one-click exports from the current rendered tab.
 
+## AI Install Prompt
+
+Paste this into an AI coding agent with terminal access, along with this repository's URL:
+
+```text
+Install X Article Downloader from the repository URL I provide.
+
+Use a clean working directory. Detect my OS. Make sure Git, Node.js 20 or newer, uv, and Chrome are installed. Clone the repository, run npm install, then run npm run doctor.
+
+If Browser Harness is missing, install it from its official repository using the README commands, then rerun npm run doctor. After the doctor passes, run npm run install-native for Google Chrome. Tell me the extension directory printed by the installer and walk me through loading it in chrome://extensions with Developer mode enabled.
+
+Do not ask me for secrets. Do not modify the project source. Stop and show the exact command output if any step fails.
+```
+
 ## Features
 
 - Export one or many `x.com`, `twitter.com`, or `mobile.twitter.com` URLs.
