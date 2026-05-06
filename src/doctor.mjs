@@ -107,13 +107,21 @@ async function checkBrowserHarness() {
 }
 
 function checkNativeHostOs() {
-  if (os.platform() === "darwin") {
+  const platform = os.platform();
+  if (platform === "darwin") {
     return { ok: true, detail: "macOS detected" };
+  }
+  if (platform === "linux") {
+    return { ok: true, detail: "Linux Chrome native host path supported" };
+  }
+  if (platform === "win32") {
+    return { ok: true, detail: "Windows Chrome registry install supported" };
   }
 
   return {
     ok: false,
-    detail: "The included Native Messaging installer supports macOS.",
+    detail:
+      "The included Native Messaging installer supports macOS, Linux, and Windows.",
   };
 }
 

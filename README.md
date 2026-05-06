@@ -19,8 +19,8 @@ Use the web UI or CLI for pasted URLs. Use the browser extension for one-click e
 
 - Node.js 20 or newer.
 - Browser Harness installed with `browser-harness` on `PATH`.
-- macOS for the included Native Messaging installer.
-- Chrome, Chrome Canary, Chromium, Brave, or Microsoft Edge for the extension workflow.
+- Chrome on macOS, Linux, or Windows for the Native Messaging installer.
+- Chrome Canary, Chromium, Brave, or Microsoft Edge native installer targets are available on macOS.
 
 ## Install
 
@@ -83,12 +83,11 @@ The installer prints the extension ID and manifest path. The default unpacked ex
 hphgjlnkhoocfnhpdabnhjddfdknkmkd
 ```
 
-The installer prints the exact Native Messaging manifest path, extension ID, and local launcher path for your browser.
+That default command supports Google Chrome on macOS, Linux, and Windows. The installer prints the exact Native Messaging manifest path, extension ID, and local launcher path for your browser.
 
-Supported browser targets:
+Additional macOS browser targets:
 
 ```sh
-npm run install-native -- --browser chrome
 npm run install-native -- --browser canary
 npm run install-native -- --browser chromium
 npm run install-native -- --browser brave

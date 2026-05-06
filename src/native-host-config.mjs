@@ -28,9 +28,100 @@ export function nativeHostManifest(hostPath, extensionId = EXTENSION_ID) {
   };
 }
 
-export function chromeNativeHostDir(browser = "chrome") {
-  const home = os.homedir();
-  const dirs = {
+export function nativeHostInstallPaths(options = {}) {
+  const platform = options.platform || process.platform;
+  const browser = options.browser || "chrome";
+  const pathApi = pathForPlatform(platform);
+  const supportDir = nativeHostSupportDir(options);
+  const manifestDir =
+    platform === "win32" ? supportDir : chromeNativeHostDir(browser, options);
+  const wrapperName = platform === "win32" ? "run-host.cmd" : "run-host.sh";
+
+  return {
+    platform,
+    browser,
+    manifestDir,
+    supportDir,
+    manifestPath: pathApi.join(manifestDir, `${NATIVE_HOST_NAME}.json`),
+    wrapperPath: pathApi.join(supportDir, wrapperName),
+    logPath: nativeHostLogPath(options),
+    registryKey:
+      platform === "win32" ? windowsNativeHostRegistryKey(browser) : "",
+  };
+}
+
+export function nativeHostSupportDir(options = {}) {
+  const platform = options.platform || process.platform;
+  const home = options.home || os.homedir();
+  const pathApi = pathForPlatform(platform);
+
+  if (platform === "darwin") {
+    return pathApi.join(
+      home,
+      "Library",
+      "Application Support",
+      "XArticleDownloaderNativeHost"
+    );
+  }
+
+  if (platform === "linux") {
+    return pathApi.join(
+      home,
+      ".local",
+      "share",
+      "x-article-downloader",
+      "native-host"
+    );
+  }
+
+  if (platform === "win32") {
+    return pathApi.join(
+      options.localAppData ||
+        process.env.LOCALAPPDATA ||
+        pathApi.join(home, "AppData", "Local"),
+      "XArticleDownloaderNativeHost"
+    );
+  }
+
+  throw new Error(`Unsupported platform: ${platform}`);
+}
+
+export function nativeHostLogPath(options = {}) {
+  const platform = options.platform || process.platform;
+  const home = options.home || os.homedir();
+  const pathApi = pathForPlatform(platform);
+
+  if (platform === "darwin") {
+    return pathApi.join(
+      home,
+      "Library",
+      "Logs",
+      "x-article-downloader-native-host.log"
+    );
+  }
+
+  if (platform === "linux") {
+    return pathApi.join(
+      home,
+      ".local",
+      "state",
+      "x-article-downloader",
+      "native-host.log"
+    );
+  }
+
+  if (platform === "win32") {
+    return pathApi.join(nativeHostSupportDir(options), "native-host.log");
+  }
+
+  throw new Error(`Unsupported platform: ${platform}`);
+}
+
+export function chromeNativeHostDir(browser = "chrome", options = {}) {
+  const platform = options.platform || process.platform;
+  const home = options.home || os.homedir();
+  const pathApi = pathForPlatform(platform);
+  const macDirs = {
     chrome: [
       "Library",
       "Application Support",
@@ -66,10 +157,42 @@ export function chromeNativeHostDir(browser = "chrome") {
     ],
   };
 
-  const parts = dirs[browser];
-  if (!parts) {
-    throw new Error(`Unsupported browser: ${browser}`);
+  const linuxDirs = {
+    chrome: [".config", "google-chrome", "NativeMessagingHosts"],
+    "chrome-for-testing": [
+      ".config",
+      "google-chrome-for-testing",
+      "NativeMessagingHosts",
+    ],
+    chromium: [".config", "chromium", "NativeMessagingHosts"],
+  };
+
+  if (platform === "win32") {
+    windowsNativeHostRegistryKey(browser);
+    return nativeHostSupportDir({ ...options, platform });
   }
 
-  return path.join(home, ...parts);
+  if (platform !== "darwin" && platform !== "linux") {
+    throw new Error(`Unsupported platform: ${platform}`);
+  }
+
+  const dirs = platform === "linux" ? linuxDirs : macDirs;
+  const parts = dirs[browser];
+  if (!parts) {
+    throw new Error(`Unsupported browser for ${platform}: ${browser}`);
+  }
+
+  return pathApi.join(home, ...parts);
+}
+
+export function windowsNativeHostRegistryKey(browser = "chrome") {
+  if (browser !== "chrome") {
+    throw new Error(`Unsupported browser for win32: ${browser}`);
+  }
+
+  return `HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\${NATIVE_HOST_NAME}`;
+}
+
+function pathForPlatform(platform) {
+  return platform === "win32" ? path.win32 : path.posix;
 }
