@@ -1,11 +1,8 @@
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
-import { chromium } from "playwright";
+import { capturePageWithBrowserHarness } from "./browser-harness.mjs";
 import { normalizeSourceUrl } from "./url.mjs";
 
-const DEFAULT_PROFILE_DIR = path.resolve(process.cwd(), ".xad-browser-profile");
 const BLOCKER_RE =
   /(log in|sign up|don't miss what's happening|something went wrong|rate limit|try again later)/i;
 
@@ -17,71 +14,18 @@ export class ExtractionError extends Error {
   }
 }
 
-export async function createBrowserContext(options = {}) {
-  const userDataDir = path.resolve(
-    options.userDataDir || process.env.XAD_USER_DATA_DIR || DEFAULT_PROFILE_DIR
-  );
-  await mkdir(userDataDir, { recursive: true });
-
-  return chromium.launchPersistentContext(userDataDir, {
-    headless: options.headless ?? process.env.XAD_HEADLESS !== "false",
-    viewport: { width: 1365, height: 900 },
-    locale: "en-US",
-    bypassCSP: true,
-    args: ["--disable-blink-features=AutomationControlled"],
-  });
-}
-
 export async function extractArticle(url, options = {}) {
   const normalizedUrl = normalizeSourceUrl(url, options);
-  const context = await createBrowserContext(options);
-  try {
-    return await extractArticleWithContext(context, normalizedUrl, options);
-  } finally {
-    await context.close();
-  }
-}
-
-export async function extractArticleWithContext(context, url, options = {}) {
-  const normalizedUrl = normalizeSourceUrl(url, options);
-  const page = await context.newPage();
-  const timeoutMs = options.timeoutMs ?? 45000;
-  page.setDefaultTimeout(timeoutMs);
-
-  try {
-    await page.goto(normalizedUrl, {
-      waitUntil: "domcontentloaded",
-      timeout: timeoutMs,
-    });
-    await page
-      .waitForLoadState("networkidle", { timeout: 12000 })
-      .catch(() => {});
-    await expandVisibleContent(page);
-    await page.waitForTimeout(options.settleMs ?? 900);
-
-    const html = await page.content();
-    const browserMeta = await page.evaluate(() => ({
-      title: document.title,
-      bodyText: document.body?.innerText?.slice(0, 8000) || "",
-      location: location.href,
-    }));
-
-    return extractArticleFromHtml(html, browserMeta.location || page.url(), {
+  const capture = await capturePageWithBrowserHarness(normalizedUrl, options);
+  return extractArticleFromHtml(
+    capture.html,
+    capture.location || normalizedUrl,
+    {
       sourceUrl: normalizedUrl,
-      browserTitle: browserMeta.title,
-      browserText: browserMeta.bodyText,
-    });
-  } finally {
-    await page.close();
-  }
-}
-
-async function expandVisibleContent(page) {
-  const labels = [/show more/i, /show this thread/i, /read more/i];
-  for (const label of labels) {
-    const locator = page.getByText(label).first();
-    await locator.click({ timeout: 1500 }).catch(() => {});
-  }
+      browserTitle: capture.title,
+      browserText: capture.bodyText,
+    }
+  );
 }
 
 export function extractArticleFromHtml(html, finalUrl, options = {}) {

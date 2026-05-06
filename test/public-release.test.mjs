@@ -36,6 +36,7 @@ const ignoredDirs = new Set([
 const personalName = String.fromCharCode(97, 100, 105, 116, 121, 97);
 const loopbackName = ["local", "host"].join("");
 const fixedLocalOrigin = `http://${loopbackName}:4512`;
+const oldBrowserRuntime = ["play", "wright"].join("");
 const forbidden = [
   {
     label: "personal macOS home path",
@@ -56,6 +57,10 @@ const forbidden = [
   {
     label: "fixed localhost port",
     pattern: new RegExp(escapeRegExp(fixedLocalOrigin), "i"),
+  },
+  {
+    label: "old browser runtime",
+    pattern: new RegExp(oldBrowserRuntime, "i"),
   },
 ];
 

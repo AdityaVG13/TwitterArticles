@@ -10,14 +10,15 @@ Use the web UI or CLI for pasted URLs. Use the browser extension for one-click e
 
 - Export one or many `x.com`, `twitter.com`, or `mobile.twitter.com` URLs.
 - Save Markdown, PDF, DOCX, or ZIP output.
-- Reuse a local authenticated browser profile for gated pages.
+- Reuse a Browser Harness Chrome profile for gated pages.
 - Capture the current rendered tab with the Chrome-compatible extension.
 - Start and stop the local server from the extension via Native Messaging.
-- Override output folder, browser profile, server port, and trusted origins.
+- Override output folder, Browser Harness command, server port, and trusted origins.
 
 ## Requirements
 
 - Node.js 20 or newer.
+- Browser Harness installed with `browser-harness` on `PATH`.
 - macOS for the included Native Messaging installer.
 - Chrome, Chrome Canary, Chromium, Brave, or Microsoft Edge for the extension workflow.
 
@@ -27,10 +28,13 @@ Use the web UI or CLI for pasted URLs. Use the browser extension for one-click e
 npm install
 ```
 
-If Playwright asks for a browser:
+Install Browser Harness if needed:
 
 ```sh
-npx playwright install chromium
+git clone https://github.com/browser-use/browser-harness ~/Developer/browser-harness
+cd ~/Developer/browser-harness
+uv tool install -e .
+browser-harness --setup
 ```
 
 ## Web UI
@@ -55,7 +59,7 @@ npm run login
 
 Log in to X in the opened browser. Wait for the home timeline or Articles page to load, then press Enter in the terminal.
 
-Cookies are saved locally in `.xad-browser-profile/`.
+Cookies stay in the Chrome profile Browser Harness is attached to.
 
 ## Browser Extension
 
@@ -122,7 +126,6 @@ Options:
 --formats md,pdf,docx   Comma-separated output formats
 --out DIR               Output directory
 --zip                   Create x-articles.zip
---headful               Show the browser while extracting
 ```
 
 ## Browser Harness Helper
@@ -145,9 +148,8 @@ Environment variables:
 ```text
 XAD_PORT=4512
 XAD_OUTPUT_DIR=./downloads
-XAD_USER_DATA_DIR=./.xad-browser-profile
-XAD_HEADLESS=false
 XAD_ALLOWED_ORIGINS=http://127.0.0.1:4512
+XAD_BROWSER_HARNESS_COMMAND=browser-harness
 XAD_SERVER_IDLE_MS=120000
 XAD_NATIVE_IDLE_MS=180000
 XAD_NATIVE_START_TIMEOUT_MS=15000

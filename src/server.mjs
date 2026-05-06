@@ -8,10 +8,7 @@ import {
   parseAllowedOrigins,
 } from "./access-control.mjs";
 import { normalizeCapturedArticle } from "./capture.mjs";
-import {
-  createBrowserContext,
-  extractArticleWithContext,
-} from "./extractor.mjs";
+import { extractArticle } from "./extractor.mjs";
 import { saveArticleFiles, zipFiles } from "./exporters.mjs";
 import { EXTENSION_ID } from "./native-host-config.mjs";
 import { normalizeSourceUrl, parseFormats, parseUrlInput } from "./url.mjs";
@@ -99,29 +96,21 @@ app.post("/api/download", async (req, res) => {
 
   const successes = [];
   const failures = [];
-  const context = await createBrowserContext({
-    headless: req.body.headful !== true,
-  });
-
-  try {
-    for (const url of urls) {
-      try {
-        const article = await extractArticleWithContext(context, url);
-        const files = await saveArticleFiles(article, formats, runDir);
-        successes.push({
-          url,
-          title: article.title,
-          files: files.map((file) => toDownloadResponse(runId, file)),
-        });
-      } catch (error) {
-        failures.push({
-          url,
-          error: error.message,
-        });
-      }
+  for (const url of urls) {
+    try {
+      const article = await extractArticle(url);
+      const files = await saveArticleFiles(article, formats, runDir);
+      successes.push({
+        url,
+        title: article.title,
+        files: files.map((file) => toDownloadResponse(runId, file)),
+      });
+    } catch (error) {
+      failures.push({
+        url,
+        error: error.message,
+      });
     }
-  } finally {
-    await context.close();
   }
 
   const allFiles = successes.flatMap((item) => item.files);

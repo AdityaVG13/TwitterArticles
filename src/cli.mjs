@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 import path from "node:path";
 import { mkdir } from "node:fs/promises";
-import {
-  createBrowserContext,
-  extractArticleWithContext,
-} from "./extractor.mjs";
+import { extractArticle } from "./extractor.mjs";
 import { saveArticleFiles, zipFiles } from "./exporters.mjs";
 import { normalizeSourceUrl, parseFormats, parseUrlInput } from "./url.mjs";
 
@@ -17,7 +14,6 @@ const options = {
     new Date().toISOString().replace(/[:.]/g, "-")
   ),
   zip: false,
-  headful: false,
   urls: [],
 };
 
@@ -29,8 +25,6 @@ for (let index = 0; index < args.length; index += 1) {
     options.outputDir = path.resolve(args[++index]);
   } else if (arg === "--zip") {
     options.zip = true;
-  } else if (arg === "--headful") {
-    options.headful = true;
   } else if (arg === "--help" || arg === "-h") {
     printHelp();
     process.exit(0);
@@ -46,28 +40,23 @@ if (!urls.length) {
 }
 
 await mkdir(options.outputDir, { recursive: true });
-const context = await createBrowserContext({ headless: !options.headful });
 const files = [];
 const failures = [];
 
-try {
-  for (const url of urls) {
-    try {
-      const article = await extractArticleWithContext(context, url);
-      const saved = await saveArticleFiles(
-        article,
-        options.formats,
-        options.outputDir
-      );
-      files.push(...saved);
-      console.log(`OK ${article.title}`);
-    } catch (error) {
-      failures.push({ url, error: error.message });
-      console.error(`FAIL ${url}: ${error.message}`);
-    }
+for (const url of urls) {
+  try {
+    const article = await extractArticle(url);
+    const saved = await saveArticleFiles(
+      article,
+      options.formats,
+      options.outputDir
+    );
+    files.push(...saved);
+    console.log(`OK ${article.title}`);
+  } catch (error) {
+    failures.push({ url, error: error.message });
+    console.error(`FAIL ${url}: ${error.message}`);
   }
-} finally {
-  await context.close();
 }
 
 if (options.zip && files.length) {
@@ -87,11 +76,9 @@ process.exit(failures.length ? 2 : 0);
 function printHelp() {
   console.log(`Usage:
   node src/cli.mjs --formats md,pdf,docx --zip URL [URL...]
-
 Options:
   --formats md,pdf,docx  Output formats. Default: md
   --out DIR              Output directory. Default: ./downloads/<timestamp>
   --zip                  Also create x-articles.zip
-  --headful              Show browser while extracting
-  npm run login          Open X login once before private/auth-gated downloads`);
+  npm run login          Open X login with Browser Harness before private/auth-gated downloads`);
 }

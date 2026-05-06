@@ -4,8 +4,8 @@ import path from "node:path";
 import archiver from "archiver";
 import * as docx from "docx";
 import { JSDOM } from "jsdom";
-import { chromium } from "playwright";
 import TurndownService from "turndown";
+import { writeHtmlPdfWithBrowserHarness } from "./browser-harness.mjs";
 import { fileStemForArticle } from "./url.mjs";
 
 const { Document, HeadingLevel, Packer, Paragraph, TextRun } = docx;
@@ -166,26 +166,11 @@ async function pathExists(filePath) {
 }
 
 export async function writePdf(article, filePath, options = {}) {
-  const browser = await chromium.launch({ headless: true });
-  try {
-    const page = await browser.newPage();
-    page.setDefaultTimeout(options.pdfTimeoutMs ?? 30000);
-    await page.setContent(renderHtmlDocument(article), {
-      waitUntil: "domcontentloaded",
-    });
-    await page
-      .waitForLoadState("networkidle", { timeout: 10000 })
-      .catch(() => {});
-    await page.emulateMedia({ media: "print" });
-    await page.pdf({
-      path: filePath,
-      format: "A4",
-      printBackground: true,
-      margin: { top: "0.2in", right: "0.2in", bottom: "0.2in", left: "0.2in" },
-    });
-  } finally {
-    await browser.close();
-  }
+  await writeHtmlPdfWithBrowserHarness(
+    renderHtmlDocument(article),
+    filePath,
+    options
+  );
 }
 
 export async function writeDocx(article, filePath) {
