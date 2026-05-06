@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import { mkdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import archiver from "archiver";
 import * as docx from "docx";
 import { JSDOM } from "jsdom";
 import TurndownService from "turndown";
+import yazl from "yazl";
 import { writeHtmlPdfWithBrowserHarness } from "./browser-harness.mjs";
 import { fileStemForArticle } from "./url.mjs";
 
@@ -294,14 +294,17 @@ export async function zipFiles(files, zipPath) {
   await mkdir(path.dirname(zipPath), { recursive: true });
   await new Promise((resolve, reject) => {
     const output = fs.createWriteStream(zipPath);
-    const archive = archiver("zip", { zlib: { level: 9 } });
+    const archive = new yazl.ZipFile();
     output.on("close", resolve);
-    archive.on("error", reject);
-    archive.pipe(output);
+    output.on("error", reject);
+    archive.outputStream.on("error", reject);
+    archive.outputStream.pipe(output);
     for (const file of files) {
-      archive.file(file.path, { name: file.name || path.basename(file.path) });
+      archive.addFile(file.path, file.name || path.basename(file.path), {
+        compress: true,
+      });
     }
-    archive.finalize();
+    archive.end();
   });
 
   const info = await stat(zipPath);
