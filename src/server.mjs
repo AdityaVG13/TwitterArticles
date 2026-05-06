@@ -1,19 +1,30 @@
-import express from 'express';
-import { mkdir } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { normalizeCapturedArticle } from './capture.mjs';
-import { createBrowserContext, extractArticleWithContext } from './extractor.mjs';
-import { saveArticleFiles, zipFiles } from './exporters.mjs';
-import { normalizeSourceUrl, parseFormats, parseUrlInput } from './url.mjs';
-import { shouldCreateZip } from './zip-policy.mjs';
+import express from "express";
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  createAccessControlMiddleware,
+  defaultAllowedOrigins,
+  parseAllowedOrigins,
+} from "./access-control.mjs";
+import { normalizeCapturedArticle } from "./capture.mjs";
+import {
+  createBrowserContext,
+  extractArticleWithContext,
+} from "./extractor.mjs";
+import { saveArticleFiles, zipFiles } from "./exporters.mjs";
+import { EXTENSION_ID } from "./native-host-config.mjs";
+import { normalizeSourceUrl, parseFormats, parseUrlInput } from "./url.mjs";
+import { shouldCreateZip } from "./zip-policy.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(__dirname, '..');
-const publicDir = path.join(rootDir, 'public');
-const downloadRoot = path.resolve(process.env.XAD_OUTPUT_DIR || path.join(rootDir, 'downloads'));
+const rootDir = path.resolve(__dirname, "..");
+const publicDir = path.join(rootDir, "public");
+const downloadRoot = path.resolve(
+  process.env.XAD_OUTPUT_DIR || path.join(rootDir, "downloads")
+);
 const port = Number(process.env.PORT || process.env.XAD_PORT || 4512);
-const managed = process.env.XAD_MANAGED === '1';
+const managed = process.env.XAD_MANAGED === "1";
 const idleMs = Number(process.env.XAD_SERVER_IDLE_MS || (managed ? 120000 : 0));
 
 const app = express();
@@ -35,44 +46,40 @@ if (idleMs > 0) {
       activeRequests -= 1;
       scheduleIdleShutdown();
     };
-    res.once('finish', finish);
-    res.once('close', finish);
+    res.once("finish", finish);
+    res.once("close", finish);
     next();
   });
 }
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'content-type');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(204);
-    return;
-  }
-  next();
-});
-app.use(express.json({ limit: '25mb' }));
+const allowedOrigins = process.env.XAD_ALLOWED_ORIGINS
+  ? parseAllowedOrigins(process.env.XAD_ALLOWED_ORIGINS)
+  : defaultAllowedOrigins({ port, extensionId: EXTENSION_ID });
+app.use(createAccessControlMiddleware({ allowedOrigins }));
+app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(publicDir));
 
-app.get('/health', (_req, res) => {
+app.get("/health", (_req, res) => {
   res.json({
     ok: true,
-    app: 'x-article-downloader',
+    app: "x-article-downloader",
     managed,
     idleMs,
     pid: process.pid,
-    downloadRoot
+    downloadRoot,
   });
 });
 
-app.post('/api/download', async (req, res) => {
+app.post("/api/download", async (req, res) => {
   const startedAt = Date.now();
   let urls;
   let formats;
 
   try {
-    urls = parseUrlInput(req.body.urls).map((url) => normalizeSourceUrl(url, { allowAnyHost: req.body.allowAnyHost === true }));
+    urls = parseUrlInput(req.body.urls).map((url) =>
+      normalizeSourceUrl(url, { allowAnyHost: req.body.allowAnyHost === true })
+    );
     formats = parseFormats(req.body.formats);
   } catch (error) {
     res.status(400).json({ ok: false, error: error.message });
@@ -80,17 +87,21 @@ app.post('/api/download', async (req, res) => {
   }
 
   if (!urls.length) {
-    res.status(400).json({ ok: false, error: 'Paste at least one X Article URL.' });
+    res
+      .status(400)
+      .json({ ok: false, error: "Paste at least one X Article URL." });
     return;
   }
 
-  const runId = new Date().toISOString().replace(/[:.]/g, '-');
+  const runId = new Date().toISOString().replace(/[:.]/g, "-");
   const runDir = path.join(downloadRoot, runId);
   await mkdir(runDir, { recursive: true });
 
   const successes = [];
   const failures = [];
-  const context = await createBrowserContext({ headless: req.body.headful !== true });
+  const context = await createBrowserContext({
+    headless: req.body.headful !== true,
+  });
 
   try {
     for (const url of urls) {
@@ -100,12 +111,12 @@ app.post('/api/download', async (req, res) => {
         successes.push({
           url,
           title: article.title,
-          files: files.map((file) => toDownloadResponse(runId, file))
+          files: files.map((file) => toDownloadResponse(runId, file)),
         });
       } catch (error) {
         failures.push({
           url,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -117,7 +128,10 @@ app.post('/api/download', async (req, res) => {
   let zip = null;
   if (shouldCreateZip(allFiles, req.body.zip)) {
     const zipped = await zipFiles(
-      allFiles.map((file) => ({ path: path.join(runDir, file.name), name: file.name })),
+      allFiles.map((file) => ({
+        path: path.join(runDir, file.name),
+        name: file.name,
+      })),
       path.join(runDir, `x-articles-${runId}.zip`)
     );
     zip = toDownloadResponse(runId, zipped);
@@ -128,11 +142,11 @@ app.post('/api/download', async (req, res) => {
     elapsedMs: Date.now() - startedAt,
     successes,
     failures,
-    zip
+    zip,
   });
 });
 
-app.post('/api/save-capture', async (req, res) => {
+app.post("/api/save-capture", async (req, res) => {
   const startedAt = Date.now();
   let article;
   let formats;
@@ -145,7 +159,7 @@ app.post('/api/save-capture', async (req, res) => {
     return;
   }
 
-  const runId = new Date().toISOString().replace(/[:.]/g, '-');
+  const runId = new Date().toISOString().replace(/[:.]/g, "-");
   const runDir = path.join(downloadRoot, runId);
   await mkdir(runDir, { recursive: true });
 
@@ -153,7 +167,10 @@ app.post('/api/save-capture', async (req, res) => {
     const files = await saveArticleFiles(article, formats, runDir);
     let zip = null;
     if (shouldCreateZip(files, req.body.zip)) {
-      zip = toDownloadResponse(runId, await zipFiles(files, path.join(runDir, `x-article-${runId}.zip`)));
+      zip = toDownloadResponse(
+        runId,
+        await zipFiles(files, path.join(runDir, `x-article-${runId}.zip`))
+      );
     }
 
     res.json({
@@ -162,32 +179,36 @@ app.post('/api/save-capture', async (req, res) => {
       success: {
         url: article.sourceUrl,
         title: article.title,
-        files: files.map((file) => toDownloadResponse(runId, file))
+        files: files.map((file) => toDownloadResponse(runId, file)),
       },
-      zip
+      zip,
     });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
 });
 
-app.get('/downloads/:runId/:fileName', (req, res) => {
-  const requested = path.resolve(downloadRoot, req.params.runId, req.params.fileName);
+app.get("/downloads/:runId/:fileName", (req, res) => {
+  const requested = path.resolve(
+    downloadRoot,
+    req.params.runId,
+    req.params.fileName
+  );
   if (!requested.startsWith(downloadRoot + path.sep)) {
-    res.status(403).send('Forbidden');
+    res.status(403).send("Forbidden");
     return;
   }
 
   res.download(requested);
 });
 
-server = app.listen(port, '127.0.0.1', () => {
+server = app.listen(port, "127.0.0.1", () => {
   console.log(`X Article Downloader listening on http://127.0.0.1:${port}`);
   console.log(`Downloads: ${downloadRoot}`);
   scheduleIdleShutdown();
 });
 
-process.on('SIGTERM', () => {
+process.on("SIGTERM", () => {
   server?.close(() => process.exit(0));
 });
 
@@ -195,7 +216,7 @@ function toDownloadResponse(runId, file) {
   return {
     name: file.name,
     bytes: file.bytes,
-    url: `/downloads/${encodeURIComponent(runId)}/${encodeURIComponent(file.name)}`
+    url: `/downloads/${encodeURIComponent(runId)}/${encodeURIComponent(file.name)}`,
   };
 }
 
