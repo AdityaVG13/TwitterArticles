@@ -208,9 +208,10 @@ export function sanitizeArticleHtml(content, finalUrl) {
   removeJunk(doc);
 
   doc.querySelectorAll("a[href]").forEach((link) => {
-    try {
-      link.href = new URL(link.getAttribute("href"), finalUrl).toString();
-    } catch {
+    const href = normalizeHttpUrl(link.getAttribute("href"), finalUrl);
+    if (href) {
+      link.href = href;
+    } else {
       link.removeAttribute("href");
     }
   });
@@ -218,25 +219,43 @@ export function sanitizeArticleHtml(content, finalUrl) {
   doc.querySelectorAll("img").forEach((img) => {
     const rawSrc =
       img.getAttribute("src") || img.getAttribute("data-src") || "";
-    try {
-      img.src = new URL(rawSrc, finalUrl).toString();
+    const src = normalizeHttpUrl(rawSrc, finalUrl);
+    if (src) {
+      img.src = src;
       img.removeAttribute("srcset");
       img.removeAttribute("sizes");
       img.loading = "lazy";
-    } catch {
+    } else {
       img.remove();
     }
   });
 
   doc.querySelectorAll("*").forEach((node) => {
     [...node.attributes].forEach((attr) => {
-      if (/^on/i.test(attr.name)) {
+      if (
+        /^on/i.test(attr.name) ||
+        attr.name === "style" ||
+        attr.name === "srcdoc"
+      ) {
         node.removeAttribute(attr.name);
       }
     });
   });
 
   return doc.querySelector("main")?.innerHTML?.trim() || "";
+}
+
+function normalizeHttpUrl(value, finalUrl) {
+  try {
+    const url = new URL(String(value || ""), finalUrl);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return "";
+    }
+
+    return url.toString();
+  } catch {
+    return "";
+  }
 }
 
 function cleanArticleHtml(content, finalUrl) {

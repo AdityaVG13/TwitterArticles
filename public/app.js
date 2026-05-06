@@ -26,7 +26,7 @@ form.addEventListener("submit", async (event) => {
   };
 
   setBusy(true);
-  renderStatus("<p>Working. Keep this tab open.</p>");
+  renderStatus(messageNode("Working. Keep this tab open."));
 
   try {
     const response = await fetch("/api/download", {
@@ -37,46 +37,55 @@ form.addEventListener("submit", async (event) => {
     const result = await response.json();
     renderResult(result);
   } catch (error) {
-    renderStatus(`<p class="error">${escapeHtml(error.message)}</p>`);
+    renderStatus(messageNode(error.message, "error"));
   } finally {
     setBusy(false);
   }
 });
 
 function renderResult(result) {
-  const parts = [];
+  const nodes = [];
 
   if (result.zip) {
-    parts.push(
-      `<a class="download" href="${result.zip.url}">Download zip (${formatBytes(result.zip.bytes)})</a>`
-    );
+    nodes.push(downloadLink(result.zip, "Download zip", "download"));
   }
 
   for (const success of result.successes || []) {
-    const links = success.files
-      .map(
-        (file) =>
-          `<a href="${file.url}">${escapeHtml(file.name)} (${formatBytes(file.bytes)})</a>`
-      )
-      .join("");
-    parts.push(
-      `<article class="result"><h2>${escapeHtml(success.title)}</h2><div class="links">${links}</div></article>`
+    const article = document.createElement("article");
+    article.className = "result";
+
+    const heading = document.createElement("h2");
+    heading.textContent = success.title || "Exported article";
+
+    const links = document.createElement("div");
+    links.className = "links";
+    links.replaceChildren(
+      ...(success.files || []).map((file) => downloadLink(file))
     );
+
+    article.replaceChildren(heading, links);
+    nodes.push(article);
   }
 
   for (const failure of result.failures || []) {
-    parts.push(
-      `<article class="result failed"><h2>${escapeHtml(failure.url)}</h2><p>${escapeHtml(failure.error)}</p></article>`
-    );
+    const article = document.createElement("article");
+    article.className = "result failed";
+
+    const heading = document.createElement("h2");
+    heading.textContent = failure.url || "Failed URL";
+
+    const message = document.createElement("p");
+    message.textContent = failure.error || "Export failed.";
+
+    article.replaceChildren(heading, message);
+    nodes.push(article);
   }
 
-  if (!parts.length) {
-    parts.push(
-      `<p class="error">${escapeHtml(result.error || "No files created.")}</p>`
-    );
+  if (!nodes.length) {
+    nodes.push(messageNode(result.error || "No files created.", "error"));
   }
 
-  renderStatus(parts.join(""));
+  renderStatus(...nodes);
 }
 
 function setBusy(isBusy) {
@@ -84,8 +93,8 @@ function setBusy(isBusy) {
   button.textContent = isBusy ? "Downloading..." : "Download";
 }
 
-function renderStatus(html) {
-  status.innerHTML = html;
+function renderStatus(...nodes) {
+  status.replaceChildren(...nodes);
 }
 
 function formatBytes(bytes) {
@@ -95,10 +104,50 @@ function formatBytes(bytes) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+function downloadLink(
+  file,
+  fallbackLabel = file?.name || "Download",
+  className = ""
+) {
+  const link = document.createElement("a");
+  const bytes = formatBytes(file?.bytes);
+  link.textContent = bytes ? `${fallbackLabel} (${bytes})` : fallbackLabel;
+  if (className) {
+    link.className = className;
+  }
+
+  const href = safeDownloadHref(file?.url);
+  if (href) {
+    link.href = href;
+  } else {
+    link.textContent = `${link.textContent} (invalid link)`;
+  }
+
+  return link;
+}
+
+function messageNode(message, className = "") {
+  const node = document.createElement("p");
+  node.textContent = message;
+  if (className) {
+    node.className = className;
+  }
+
+  return node;
+}
+
+function safeDownloadHref(value) {
+  try {
+    const url = new URL(String(value || ""), location.origin);
+    if (
+      url.origin !== location.origin ||
+      !url.pathname.startsWith("/downloads/")
+    ) {
+      return "";
+    }
+
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return "";
+  }
 }

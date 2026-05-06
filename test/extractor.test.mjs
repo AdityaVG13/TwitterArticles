@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { extractArticleFromHtml } from "../src/extractor.mjs";
+import {
+  extractArticleFromHtml,
+  sanitizeArticleHtml,
+} from "../src/extractor.mjs";
 
 test("extractArticleFromHtml reads article metadata and content", () => {
   const article = extractArticleFromHtml(
@@ -44,4 +47,26 @@ test("extractArticleFromHtml reports login walls", () => {
       ),
     /login/
   );
+});
+
+test("sanitizeArticleHtml removes active content and unsafe URLs", () => {
+  const html = sanitizeArticleHtml(
+    `
+      <p style="position:absolute" onclick="alert(1)">
+        Safe text
+        <a href="javascript:alert(1)">bad link</a>
+        <a href="/relative">good link</a>
+        <img src="data:text/html,<script>alert(1)</script>" alt="bad image">
+        <img src="/image.jpg" alt="good image">
+      </p>
+    `,
+    "https://x.com/example_user/status/123"
+  );
+
+  assert.doesNotMatch(html, /javascript:/i);
+  assert.doesNotMatch(html, /data:text\/html/i);
+  assert.doesNotMatch(html, /onclick/i);
+  assert.doesNotMatch(html, /style=/i);
+  assert.match(html, /href="https:\/\/x.com\/relative"/);
+  assert.match(html, /src="https:\/\/x.com\/image\.jpg"/);
 });

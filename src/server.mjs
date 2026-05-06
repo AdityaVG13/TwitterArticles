@@ -8,9 +8,12 @@ import {
   parseAllowedOrigins,
 } from "./access-control.mjs";
 import { normalizeCapturedArticle } from "./capture.mjs";
+import { downloadFilePath } from "./download-paths.mjs";
 import { extractArticle } from "./extractor.mjs";
 import { saveArticleFiles, zipFiles } from "./exporters.mjs";
+import { normalizePort } from "./loopback-origin.mjs";
 import { EXTENSION_ID } from "./native-host-config.mjs";
+import { createSecurityHeadersMiddleware } from "./security-headers.mjs";
 import { normalizeSourceUrl, parseFormats, parseUrlInput } from "./url.mjs";
 import { shouldCreateZip } from "./zip-policy.mjs";
 
@@ -20,7 +23,7 @@ const publicDir = path.join(rootDir, "public");
 const downloadRoot = path.resolve(
   process.env.XAD_OUTPUT_DIR || path.join(rootDir, "downloads")
 );
-const port = Number(process.env.PORT || process.env.XAD_PORT || 4512);
+const port = normalizePort(process.env.PORT || process.env.XAD_PORT || 4512);
 const managed = process.env.XAD_MANAGED === "1";
 const idleMs = Number(process.env.XAD_SERVER_IDLE_MS || (managed ? 120000 : 0));
 
@@ -52,9 +55,9 @@ if (idleMs > 0) {
 const allowedOrigins = process.env.XAD_ALLOWED_ORIGINS
   ? parseAllowedOrigins(process.env.XAD_ALLOWED_ORIGINS)
   : defaultAllowedOrigins({ port, extensionId: EXTENSION_ID });
+app.use(createSecurityHeadersMiddleware());
 app.use(createAccessControlMiddleware({ allowedOrigins }));
 app.use(express.json({ limit: "25mb" }));
-app.use(express.urlencoded({ extended: true }));
 app.use(express.static(publicDir));
 
 app.get("/health", (_req, res) => {
@@ -64,7 +67,6 @@ app.get("/health", (_req, res) => {
     managed,
     idleMs,
     pid: process.pid,
-    downloadRoot,
   });
 });
 
@@ -74,9 +76,7 @@ app.post("/api/download", async (req, res) => {
   let formats;
 
   try {
-    urls = parseUrlInput(req.body.urls).map((url) =>
-      normalizeSourceUrl(url, { allowAnyHost: req.body.allowAnyHost === true })
-    );
+    urls = parseUrlInput(req.body.urls).map((url) => normalizeSourceUrl(url));
     formats = parseFormats(req.body.formats);
   } catch (error) {
     res.status(400).json({ ok: false, error: error.message });
@@ -178,12 +178,14 @@ app.post("/api/save-capture", async (req, res) => {
 });
 
 app.get("/downloads/:runId/:fileName", (req, res) => {
-  const requested = path.resolve(
-    downloadRoot,
-    req.params.runId,
-    req.params.fileName
-  );
-  if (!requested.startsWith(downloadRoot + path.sep)) {
+  let requested;
+  try {
+    requested = downloadFilePath(
+      downloadRoot,
+      req.params.runId,
+      req.params.fileName
+    );
+  } catch {
     res.status(403).send("Forbidden");
     return;
   }

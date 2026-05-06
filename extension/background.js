@@ -1,10 +1,8 @@
-const DEFAULT_OPTIONS = {
-  serverOrigin: "http://127.0.0.1:4512",
-  serverMode: "native",
-  formats: ["md"],
-  zip: true,
-};
-const NATIVE_HOST_NAME = "org.x_article_downloader.native_host";
+import {
+  DEFAULT_OPTIONS,
+  NATIVE_HOST_NAME,
+  normalizeServerOrigin,
+} from "./config.js";
 
 let nativePort = null;
 let nativeRequestId = 0;
@@ -94,9 +92,9 @@ chrome.action.onClicked.addListener(async (tab) => {
 async function getOptions() {
   const stored = await chrome.storage.sync.get(DEFAULT_OPTIONS);
   return {
-    serverOrigin: String(
+    serverOrigin: normalizeServerOrigin(
       stored.serverOrigin || DEFAULT_OPTIONS.serverOrigin
-    ).replace(/\/$/, ""),
+    ),
     serverMode: stored.serverMode || DEFAULT_OPTIONS.serverMode,
     formats:
       Array.isArray(stored.formats) && stored.formats.length

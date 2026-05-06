@@ -4,12 +4,16 @@ import { mkdir, open } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  normalizeLoopbackOrigin,
+  normalizePort,
+} from "../src/loopback-origin.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const serverPath = path.join(rootDir, "src", "server.mjs");
 const logPath = path.join(rootDir, "downloads", "native-host.log");
-const defaultPort = Number(process.env.XAD_PORT || 4512);
+const defaultPort = normalizePort(process.env.XAD_PORT || 4512);
 const startTimeoutMs = Number(process.env.XAD_NATIVE_START_TIMEOUT_MS || 15000);
 const idleTimeoutMs = Number(process.env.XAD_NATIVE_IDLE_MS || 180000);
 const serverIdleMs = Number(process.env.XAD_SERVER_IDLE_MS || 120000);
@@ -101,7 +105,7 @@ async function ensureStarted(message = {}) {
 }
 
 function startServer(message = {}) {
-  const port = Number(message.port || defaultPort);
+  const port = normalizePort(message.port || defaultPort);
   child = spawn(process.execPath, [serverPath], {
     cwd: rootDir,
     env: {
@@ -146,12 +150,7 @@ async function stopManagedServer() {
 }
 
 function originFromMessage(message = {}) {
-  if (message.origin) {
-    return String(message.origin).replace(/\/$/, "");
-  }
-
-  const port = Number(message.port || defaultPort);
-  return `http://127.0.0.1:${port}`;
+  return normalizeLoopbackOrigin(message.origin, message.port || defaultPort);
 }
 
 async function readMessages() {

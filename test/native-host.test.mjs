@@ -38,10 +38,41 @@ test("native host starts and stops the managed server", async () => {
     assert.equal(health.ok, true);
     assert.equal(health.app, "x-article-downloader");
     assert.equal(health.managed, true);
+    assert.equal(health.downloadRoot, undefined);
 
     const stop = await request(host, { type: "stop" });
     assert.equal(stop.ok, true);
     await eventuallyRejects(() => httpJson(`http://127.0.0.1:${port}/health`));
+  } finally {
+    host.stdin.end();
+    await Promise.race([
+      once(host, "exit"),
+      sleep(2500).then(() => host.kill("SIGKILL")),
+    ]);
+  }
+});
+
+test("native host rejects non-loopback server origins", async () => {
+  const port = await getFreePort();
+  const host = spawn(process.execPath, [hostPath], {
+    cwd: rootDir,
+    env: {
+      ...process.env,
+      XAD_PORT: String(port),
+      XAD_NATIVE_IDLE_MS: "30000",
+    },
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+
+  try {
+    const start = await request(host, {
+      type: "ensureStarted",
+      origin: `http://example.com:${port}`,
+      port,
+    });
+    assert.equal(start.ok, false);
+    assert.match(start.error, /loopback/);
+    await assert.rejects(() => httpJson(`http://127.0.0.1:${port}/health`));
   } finally {
     host.stdin.end();
     await Promise.race([

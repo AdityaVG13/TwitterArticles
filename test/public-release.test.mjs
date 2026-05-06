@@ -101,6 +101,11 @@ test("extension local host permissions are configurable by port", async () => {
   assert.ok(!manifest.host_permissions.includes(`${fixedLocalOrigin}/*`));
 });
 
+test("public UI avoids dynamic HTML injection sinks", async () => {
+  const appJs = await readFile(path.join(rootDir, "public", "app.js"), "utf8");
+  assert.doesNotMatch(appJs, /\.innerHTML\s*=/);
+});
+
 async function listScannedFiles() {
   const files = [];
   for (const entry of scannedRoots) {

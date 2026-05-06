@@ -1,9 +1,4 @@
-const DEFAULT_OPTIONS = {
-  serverOrigin: "http://127.0.0.1:4512",
-  serverMode: "native",
-  formats: ["md"],
-  zip: true,
-};
+import { DEFAULT_OPTIONS, normalizeServerOrigin } from "./config.js";
 
 const form = document.querySelector("#optionsForm");
 const status = document.querySelector("#status");
@@ -37,13 +32,17 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  await chrome.storage.sync.set({
-    serverOrigin: form.serverOrigin.value.trim().replace(/\/$/, ""),
-    serverMode: form.querySelector('input[name="serverMode"]:checked').value,
-    formats,
-    zip: form.zip.checked,
-  });
-  setStatus("Saved.");
+  try {
+    await chrome.storage.sync.set({
+      serverOrigin: normalizeServerOrigin(form.serverOrigin.value),
+      serverMode: form.querySelector('input[name="serverMode"]:checked').value,
+      formats,
+      zip: form.zip.checked,
+    });
+    setStatus("Saved.");
+  } catch (error) {
+    setStatus(error.message, true);
+  }
 });
 
 startServer.addEventListener("click", async () => {
