@@ -82,17 +82,7 @@ The installer prints the extension ID and manifest path. The default unpacked ex
 hphgjlnkhoocfnhpdabnhjddfdknkmkd
 ```
 
-The Native Messaging manifest is written under the selected browser support directory, for example:
-
-```text
-~/Library/Application Support/Google/Chrome/NativeMessagingHosts/org.x_article_downloader.native_host.json
-```
-
-The launcher is written to:
-
-```text
-~/Library/Application Support/XArticleDownloaderNativeHost/run-host.sh
-```
+The installer prints the exact Native Messaging manifest path, extension ID, and local launcher path for your browser.
 
 Supported browser targets:
 

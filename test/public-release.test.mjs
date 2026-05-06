@@ -32,6 +32,10 @@ const forbidden = [
     pattern: new RegExp(escapeRegExp(oldBrowserHarnessFolder), "i"),
   },
   {
+    label: "home-relative local support path",
+    pattern: /~\/Library\/Application Support/i,
+  },
+  {
     label: "personal GitHub username",
     pattern: new RegExp(["Aditya", "VG13"].join(""), "i"),
   },

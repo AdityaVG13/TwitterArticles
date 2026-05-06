@@ -11,10 +11,14 @@ Usage:
 """
 
 import json
+import os
 import urllib.request
 
 
-XAD_SERVER = "http://127.0.0.1:4512"
+XAD_SERVER = os.environ.get("XAD_SERVER") or "http://127.0.0.1:" + os.environ.get(
+    "XAD_PORT",
+    "4512",
+)
 
 
 def download_current_x_article(formats=None, zip_result=True, server_origin=XAD_SERVER):
