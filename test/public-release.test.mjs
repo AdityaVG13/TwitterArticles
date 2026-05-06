@@ -19,6 +19,7 @@ const scannedRoots = [
   "CONTEXT.md",
   "LICENSE",
   "README.md",
+  "SECURITY.md",
   "extension",
   "native-host",
   "package.json",

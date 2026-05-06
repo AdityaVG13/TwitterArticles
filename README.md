@@ -159,6 +159,18 @@ By default, the server trusts its loopback web UI origins and the bundled extens
 
 If you build the extension with a different key, set `XAD_ALLOWED_ORIGINS` to include that extension origin.
 
+## Security Model
+
+- The server binds only to `127.0.0.1`.
+- The extension and Native Messaging host accept only loopback HTTP server origins with explicit user ports.
+- Browser API requests are protected by an origin allowlist and security headers.
+- Download paths are validated before files are served.
+- `/health` does not expose your local output directory.
+- Article content is processed locally and is not uploaded to a third-party service.
+- Browser automation uses Browser Harness only.
+
+See [SECURITY.md](SECURITY.md) for permission details and release checks.
+
 ## Notes
 
 - Default input is restricted to `x.com`, `twitter.com`, and `mobile.twitter.com`.
@@ -173,6 +185,7 @@ If you build the extension with a different key, set `XAD_ALLOWED_ORIGINS` to in
 npm run format:check
 npm run check
 npm test
+npm run audit
 ```
 
 Optional PDF smoke test:
