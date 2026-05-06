@@ -1,47 +1,51 @@
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
+const execFileAsync = promisify(execFile);
 const rootDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   ".."
 );
 const thisFile = fileURLToPath(import.meta.url);
-const scannedRoots = [
-  ".env.example",
-  ".github",
-  ".gitignore",
-  ".husky",
-  ".lintstagedrc",
-  ".prettierrc",
-  "CONTEXT.md",
-  "LICENSE",
-  "README.md",
-  "SECURITY.md",
-  "extension",
-  "native-host",
-  "package.json",
-  "public",
-  "scripts",
-  "src",
-  "test",
-];
-const ignoredDirs = new Set([
-  ".git",
-  "downloads",
-  "node_modules",
-  ".xad-browser-profile",
-]);
 const personalName = String.fromCharCode(97, 100, 105, 116, 121, 97);
 const loopbackName = ["local", "host"].join("");
 const fixedLocalOrigin = `http://${loopbackName}:4512`;
 const oldBrowserRuntime = ["play", "wright"].join("");
+const homeDirPrefix = ["Users"].join("");
+const oldBrowserHarnessFolder = ["Developer", "browser-harness"].join("/");
 const forbidden = [
   {
     label: "personal macOS home path",
     pattern: new RegExp(`/${["Users", personalName].join("/")}`, "i"),
+  },
+  {
+    label: "absolute macOS user path",
+    pattern: new RegExp(`/${homeDirPrefix}/[^\\s'")]+`, "i"),
+  },
+  {
+    label: "local Browser Harness checkout folder",
+    pattern: new RegExp(escapeRegExp(oldBrowserHarnessFolder), "i"),
+  },
+  {
+    label: "personal GitHub username",
+    pattern: new RegExp(["Aditya", "VG13"].join(""), "i"),
+  },
+  {
+    label: "personal GitHub display name",
+    pattern: new RegExp([personalName, "g"].join(""), "i"),
+  },
+  {
+    label: "personal GitHub noreply id",
+    pattern: new RegExp(["44177453", personalName].join(".*"), "i"),
+  },
+  {
+    label: "Mac hardware note",
+    pattern: /MacBook|M5 Max/i,
   },
   {
     label: "personal native host id",
@@ -54,6 +58,10 @@ const forbidden = [
   {
     label: "old local repo path slug",
     pattern: new RegExp(["twitter", "article", "downloader"].join("-"), "i"),
+  },
+  {
+    label: "personal GitHub repo name",
+    pattern: /TwitterArticles/i,
   },
   {
     label: "fixed localhost port",
@@ -108,30 +116,16 @@ test("public UI avoids dynamic HTML injection sinks", async () => {
 });
 
 async function listScannedFiles() {
-  const files = [];
-  for (const entry of scannedRoots) {
-    await collect(path.join(rootDir, entry), files);
-  }
-  return files;
-}
-
-async function collect(target, files) {
-  const entries = await readdir(target, { withFileTypes: true }).catch(
-    () => null
-  );
-  if (!entries) {
-    files.push(target);
-    return;
-  }
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      if (!ignoredDirs.has(entry.name)) {
-        await collect(path.join(target, entry.name), files);
-      }
-    } else if (entry.isFile()) {
-      files.push(path.join(target, entry.name));
-    }
-  }
+  const { stdout } = await execFileAsync("git", ["ls-files", "-z"], {
+    cwd: rootDir,
+    encoding: "buffer",
+    maxBuffer: 1024 * 1024,
+  });
+  return stdout
+    .toString("utf8")
+    .split("\0")
+    .filter(Boolean)
+    .map((file) => path.join(rootDir, file));
 }
 
 function escapeRegExp(value) {

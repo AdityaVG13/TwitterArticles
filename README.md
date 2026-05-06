@@ -31,8 +31,8 @@ npm install
 Install Browser Harness if needed:
 
 ```sh
-git clone https://github.com/browser-use/browser-harness ~/Developer/browser-harness
-cd ~/Developer/browser-harness
+git clone https://github.com/browser-use/browser-harness
+cd browser-harness
 uv tool install -e .
 browser-harness --setup
 ```
