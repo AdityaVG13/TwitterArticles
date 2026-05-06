@@ -35,10 +35,19 @@ npm run format:check
 npm run check
 npm test
 npm run audit
+npm run security:scan
 npm pack --dry-run
 ```
 
 `npm run audit` fails on high severity production dependency advisories.
+`npm run security:scan` packages the npm artifact, scans the tarball and unpacked package with ClamAV when available, and runs Semgrep security rules when available.
+
+VirusTotal is optional because it requires an API key and may upload an artifact to a third-party service:
+
+```sh
+VIRUSTOTAL_API_KEY=... npm run security:virustotal
+VIRUSTOTAL_API_KEY=... npm run security:virustotal -- --upload
+```
 
 ## Reporting A Vulnerability
 

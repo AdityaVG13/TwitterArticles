@@ -35,6 +35,7 @@ export function createAccessControlMiddleware({ allowedOrigins = [] } = {}) {
       res.end("Forbidden origin");
       return;
     }
+    // nosemgrep: javascript.express.security.cors-misconfiguration.cors-misconfiguration
     res.setHeader("Access-Control-Allow-Origin", origin);
     if (req.method === "OPTIONS") {
       res.statusCode = 204;

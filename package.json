@@ -30,10 +30,12 @@
     "uninstall-native": "node src/uninstall-native.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "node --check src/*.mjs native-host/*.mjs extension/*.js extension/content/*.js test/*.mjs",
+    "check": "node --check src/*.mjs native-host/*.mjs scripts/*.mjs extension/*.js extension/content/*.js test/*.mjs",
     "test": "node --test test/*.test.mjs",
     "test:pdf": "XAD_TEST_PDF=1 node --test test/exporters.test.mjs",
     "audit": "npm audit --omit=dev --audit-level=high",
+    "security:scan": "bash scripts/security-scan.sh",
+    "security:virustotal": "node scripts/virustotal-scan.mjs",
     "prepare": "husky"
   },
   "dependencies": {

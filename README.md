@@ -194,6 +194,24 @@ Optional PDF smoke test:
 npm run test:pdf
 ```
 
+Local artifact malware/security scan:
+
+```sh
+npm run security:scan
+```
+
+Optional VirusTotal hash lookup:
+
+```sh
+VIRUSTOTAL_API_KEY=... npm run security:virustotal
+```
+
+To submit the generated package artifact to VirusTotal:
+
+```sh
+VIRUSTOTAL_API_KEY=... npm run security:virustotal -- --upload
+```
+
 Pre-commit hooks run staged formatting, syntax checks, and tests.
 
 ## License
