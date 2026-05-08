@@ -1,14 +1,29 @@
 # X Article Downloader
 
-Export X Articles and long-form status pages to Markdown, PDF, DOCX, or ZIP from a local browser session.
+[![Node.js 20+](https://img.shields.io/badge/Node.js-20%2B-2f6f4e?style=flat-square)](#requirements)
+[![License MIT](https://img.shields.io/badge/license-MIT-2f2f2f?style=flat-square)](LICENSE)
+[![Local first](https://img.shields.io/badge/local--first-no%20cloud%20upload-3f5f7f?style=flat-square)](#security-model)
+[![Support on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-ff5f5f?style=flat-square&logo=ko-fi&logoColor=white)](https://ko-fi.com/adityavg13)
 
-The app runs locally. It does not send article content to a third-party service.
+Export X Articles and long-form status pages from your own browser session to Markdown, PDF, DOCX, or ZIP.
 
-Use the web UI or CLI for pasted URLs. Use the browser extension for one-click exports from the current rendered tab.
+The app is local-first. Article content is processed on your machine, the web server binds to `127.0.0.1`, and authenticated captures reuse your own Chrome profile through Browser Harness.
+
+| Use case                         | Best path                    |
+| -------------------------------- | ---------------------------- |
+| Paste one or many X URLs         | Run the local web UI         |
+| Save the current rendered tab    | Install the Chrome extension |
+| Automate exports from scripts    | Use the CLI                  |
+| Capture gated or logged-in pages | Use Browser Harness login    |
+
+Generated file names use the article title and tweet author when page metadata is available.
 
 ## AI Install Prompt
 
-Paste this into an AI coding agent with terminal access, along with this repository's URL:
+Paste this into an AI coding agent with terminal access, along with this repository's URL.
+
+<details open>
+<summary>Copy-paste install prompt</summary>
 
 ```text
 Install X Article Downloader from the repository URL I provide.
@@ -20,45 +35,18 @@ If Browser Harness is missing, install it from its official repository using the
 Do not ask me for secrets. Do not modify the project source. Stop and show the exact command output if any step fails.
 ```
 
-## Support This Work
+</details>
 
-If X Article Downloader saves you time, donations help fund maintenance, testing, documentation, and more open-source tools.
+## Quick Start
 
-[![Support on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-ff5f5f?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/adityavg13)
-
-## Features
-
-- Export one or many `x.com`, `twitter.com`, or `mobile.twitter.com` URLs.
-- Save Markdown, PDF, DOCX, or ZIP output.
-- Reuse a Browser Harness Chrome profile for gated pages.
-- Capture the current rendered tab with the Chrome-compatible extension.
-- Start and stop the local server from the extension via Native Messaging.
-- Override output folder, Browser Harness command, server port, and trusted origins.
-
-## Requirements
-
-- Node.js 20 or newer.
-- Browser Harness installed with `browser-harness` on `PATH`.
-- Chrome on macOS, Linux, or Windows for the Native Messaging installer.
-- Chrome Canary, Chromium, Brave, or Microsoft Edge native installer targets are available on macOS.
-
-## Install
+Install dependencies and run the doctor:
 
 ```sh
 npm install
 npm run doctor
 ```
 
-Install Browser Harness if needed:
-
-```sh
-git clone https://github.com/browser-use/browser-harness
-cd browser-harness
-uv tool install -e .
-browser-harness --setup
-```
-
-## Web UI
+Start the local UI:
 
 ```sh
 npm start
@@ -70,40 +58,56 @@ Open:
 http://127.0.0.1:4512
 ```
 
-Paste URLs, choose formats, and download the results. Files are written to `downloads/`.
+Paste X Article or status URLs, choose formats, and download the results. Files are written to `downloads/`.
 
-## Authenticated Pages
+## Requirements
+
+| Requirement                        | Why it is needed                                        |
+| ---------------------------------- | ------------------------------------------------------- |
+| Node.js 20 or newer                | Runs the local server, CLI, exporters, and native host  |
+| Browser Harness on `PATH`          | Opens Chrome and captures authenticated pages           |
+| Chrome on macOS, Linux, or Windows | Required for the Native Messaging installer             |
+| uv                                 | Installs Browser Harness if it is not already available |
+
+Install Browser Harness if `npm run doctor` reports it missing:
 
 ```sh
-npm run login
+git clone https://github.com/browser-use/browser-harness
+cd browser-harness
+uv tool install -e .
+browser-harness --setup
 ```
 
-Log in to X in the opened browser. Wait for the home timeline or Articles page to load, then press Enter in the terminal.
+## Chrome Extension
 
-Cookies stay in the Chrome profile Browser Harness is attached to.
+The extension gives you one-click export from the current X Article or status tab. In native mode, it starts the local server when needed, captures the rendered tab, exports files, and downloads the result.
 
-## Browser Extension
-
-Install the Native Messaging host:
+Install the Native Messaging host for Google Chrome:
 
 ```sh
 npm run install-native
 ```
 
-Load the extension:
+Load the unpacked extension:
 
 1. Open `chrome://extensions`.
 2. Enable Developer mode.
 3. Click Load unpacked.
 4. Choose the `extension/` directory from this repo.
 
-The installer prints the extension ID and manifest path. The default unpacked extension ID is:
+The installer prints the extension directory, extension ID, manifest path, and local launcher path. The default unpacked extension ID is:
 
 ```text
 hphgjlnkhoocfnhpdabnhjddfdknkmkd
 ```
 
-That default command supports Google Chrome on macOS, Linux, and Windows. The installer prints the exact Native Messaging manifest path, extension ID, and local launcher path for your browser.
+Google Chrome Native Messaging install support:
+
+| OS      | Default command          |
+| ------- | ------------------------ |
+| macOS   | `npm run install-native` |
+| Linux   | `npm run install-native` |
+| Windows | `npm run install-native` |
 
 Additional macOS browser targets:
 
@@ -114,17 +118,29 @@ npm run install-native -- --browser brave
 npm run install-native -- --browser edge
 ```
 
-Use the extension button from an open X Article or status tab. In native mode, the extension starts the local server if needed, captures the rendered tab, exports files, and downloads the result.
-
 When the extension disconnects, the managed server shuts down after its idle timeout.
 
-To remove the Native Messaging host:
+Remove the Native Messaging host:
 
 ```sh
 npm run uninstall-native
 ```
 
+## Authenticated Pages
+
+Use this when X returns a login wall, rate-limit page, interstitial, or incomplete article.
+
+```sh
+npm run login
+```
+
+Log in to X in the opened browser. Wait for the home timeline or Articles page to load, then press Enter in the terminal.
+
+Browser Harness stores cookies in the Chrome profile it controls. The app does not ask for your X credentials.
+
 ## CLI
+
+Export from a script or terminal:
 
 ```sh
 node src/cli.mjs --formats md,pdf,docx --zip https://x.com/user/status/123
@@ -140,7 +156,7 @@ Options:
 
 ## Browser Harness Helper
 
-From the repo root:
+Capture the current logged-in tab from Browser Harness:
 
 ```sh
 npm start
@@ -172,24 +188,25 @@ If you build the extension with a different key, set `XAD_ALLOWED_ORIGINS` to in
 ## Security Model
 
 - The server binds only to `127.0.0.1`.
+- Article content is processed locally and is not uploaded to a third-party service.
 - The extension and Native Messaging host accept only loopback HTTP server origins with explicit user ports.
 - Browser API requests are protected by an origin allowlist and security headers.
 - Download paths are validated before files are served.
 - `/health` does not expose your local output directory.
-- Article content is processed locally and is not uploaded to a third-party service.
 - Browser automation uses Browser Harness only.
 
-See [SECURITY.md](SECURITY.md) for permission details and release checks.
+See [SECURITY.md](SECURITY.md) for permissions, threat model details, and release checks.
 
 ## Notes
 
 - Default input is restricted to `x.com`, `twitter.com`, and `mobile.twitter.com`.
 - Markdown and PDF preserve images as remote links or assets.
 - DOCX preserves text structure and image URLs.
-- If extraction reports a login, rate-limit, or interstitial page, run `npm run login` and retry.
 - Use this for content you have rights to access and store.
 
 ## Development
+
+Core checks:
 
 ```sh
 npm run format:check
@@ -216,13 +233,19 @@ Optional VirusTotal hash lookup:
 VIRUSTOTAL_API_KEY=... npm run security:virustotal
 ```
 
-To submit the generated package artifact to VirusTotal:
+Submit the generated package artifact to VirusTotal:
 
 ```sh
 VIRUSTOTAL_API_KEY=... npm run security:virustotal -- --upload
 ```
 
 Pre-commit hooks run staged formatting, syntax checks, and tests.
+
+## Support This Work
+
+If X Article Downloader saves you time, donations help fund maintenance, testing, documentation, and more open-source tools.
+
+[![Support on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-ff5f5f?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/adityavg13)
 
 ## License
 
