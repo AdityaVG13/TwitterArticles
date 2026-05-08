@@ -20,6 +20,10 @@ If Browser Harness is missing, install it from its official repository using the
 Do not ask me for secrets. Do not modify the project source. Stop and show the exact command output if any step fails.
 ```
 
+## Donations
+
+Donations help support more open-source projects: [ko-fi.com/adityavg13](https://ko-fi.com/adityavg13)
+
 ## Features
 
 - Export one or many `x.com`, `twitter.com`, or `mobile.twitter.com` URLs.

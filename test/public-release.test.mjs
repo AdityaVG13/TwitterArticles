@@ -18,6 +18,7 @@ const fixedLocalOrigin = `http://${loopbackName}:4512`;
 const oldBrowserRuntime = ["play", "wright"].join("");
 const homeDirPrefix = ["Users"].join("");
 const oldBrowserHarnessFolder = ["Developer", "browser-harness"].join("/");
+const intentionalDonationLink = "ko-fi.com/adityavg13";
 const forbidden = [
   {
     label: "personal macOS home path",
@@ -84,7 +85,7 @@ test("public release files do not contain personal development references", asyn
     if (file === thisFile) {
       continue;
     }
-    const content = await readFile(file, "utf8");
+    const content = removeIntentionalPublicLinks(await readFile(file, "utf8"));
     for (const item of forbidden) {
       if (item.pattern.test(content)) {
         failures.push(`${path.relative(rootDir, file)}: ${item.label}`);
@@ -134,4 +135,8 @@ async function listScannedFiles() {
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function removeIntentionalPublicLinks(content) {
+  return content.replaceAll(intentionalDonationLink, "");
 }
