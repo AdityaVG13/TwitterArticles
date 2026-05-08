@@ -20,9 +20,11 @@ If Browser Harness is missing, install it from its official repository using the
 Do not ask me for secrets. Do not modify the project source. Stop and show the exact command output if any step fails.
 ```
 
-## Donations
+## Support This Work
 
-Donations help support more open-source projects: [ko-fi.com/adityavg13](https://ko-fi.com/adityavg13)
+If X Article Downloader saves you time, donations help fund maintenance, testing, documentation, and more open-source tools.
+
+[![Support on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-ff5f5f?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/adityavg13)
 
 ## Features
 
