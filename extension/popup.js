@@ -12,18 +12,23 @@ const queueList = document.querySelector("#queueList");
 const queueCount = document.querySelector("#queueCount");
 const statusEl = document.querySelector("#status");
 const openOptions = document.querySelector("#openOptions");
-const formatInputs = batchView.querySelectorAll('input[name="formats"]');
+const formatChips = batchView.querySelectorAll(".chip");
 
 const stored = await chrome.storage.sync.get(DEFAULT_OPTIONS);
 let captureMode = stored.captureMode || DEFAULT_OPTIONS.captureMode;
+const initialFormats =
+  Array.isArray(stored.formats) && stored.formats.length
+    ? stored.formats
+    : DEFAULT_OPTIONS.formats;
 
-for (const input of formatInputs) {
-  const formats =
-    Array.isArray(stored.formats) && stored.formats.length
-      ? stored.formats
-      : DEFAULT_OPTIONS.formats;
-  input.checked = formats.includes(input.value);
-  input.addEventListener("change", saveFormats);
+for (const chip of formatChips) {
+  const input = chip.querySelector("input");
+  input.checked = initialFormats.includes(input.value);
+  syncChipState(chip);
+  input.addEventListener("change", () => {
+    syncChipState(chip);
+    saveFormats();
+  });
 }
 
 renderMode();
@@ -38,7 +43,7 @@ captureSingleBtn.addEventListener("click", async () => {
     if (!result?.ok) {
       throw new Error(result?.error || "Capture failed.");
     }
-    setStatus(`Saved ${result.files?.length || 0} file(s).`);
+    setStatus(`Saved ${result.files?.length || 0} file(s).`, "success");
     setTimeout(() => window.close(), 700);
   });
 });
@@ -49,11 +54,7 @@ addTabBtn.addEventListener("click", async () => {
     if (!result?.ok) {
       throw new Error(result?.error || "Could not add tab.");
     }
-    if (result.duplicate) {
-      setStatus("Already in queue.");
-    } else {
-      setStatus("Added.");
-    }
+    setStatus(result.duplicate ? "Already in queue." : "Added.", "success");
     await renderQueue();
   });
 });
@@ -69,7 +70,8 @@ saveZipBtn.addEventListener("click", async () => {
     setStatus(
       failed
         ? `Saved ${ok} article(s), ${failed} failed. ZIP downloaded.`
-        : `Saved ${ok} article(s). ZIP downloaded.`
+        : `Saved ${ok} article(s). ZIP downloaded.`,
+      failed ? "" : "success"
     );
     await renderQueue();
   });
@@ -103,7 +105,8 @@ function renderMode() {
 async function renderQueue() {
   const result = await sendMessage({ type: "batch:list" });
   const queue = Array.isArray(result?.queue) ? result.queue : [];
-  queueCount.textContent = `${queue.length} queued`;
+  queueCount.textContent =
+    queue.length === 1 ? "1 in queue" : `${queue.length} in queue`;
   queueList.replaceChildren();
 
   for (const entry of queue) {
@@ -123,8 +126,8 @@ async function renderQueue() {
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "icon";
+    remove.setAttribute("aria-label", `Remove ${entry.article?.title || ""}`);
     remove.textContent = "×";
-    remove.title = "Remove";
     remove.addEventListener("click", async () => {
       await sendMessage({ type: "batch:remove", id: entry.id });
       await renderQueue();
@@ -136,6 +139,17 @@ async function renderQueue() {
 
   saveZipBtn.disabled = queue.length === 0;
   clearBtn.disabled = queue.length === 0;
+  saveZipBtn.textContent =
+    queue.length === 0
+      ? "Save to ZIP"
+      : queue.length === 1
+        ? "Save 1 article as ZIP"
+        : `Save ${queue.length} articles as ZIP`;
+}
+
+function syncChipState(chip) {
+  const input = chip.querySelector("input");
+  chip.classList.toggle("is-active", input.checked);
 }
 
 function extractAuthor(url) {
@@ -149,7 +163,8 @@ function extractAuthor(url) {
 }
 
 async function saveFormats() {
-  const formats = [...formatInputs]
+  const formats = [...formatChips]
+    .map((chip) => chip.querySelector("input"))
     .filter((input) => input.checked)
     .map((input) => input.value);
   if (formats.length) {
@@ -157,9 +172,9 @@ async function saveFormats() {
   }
 }
 
-function setStatus(message, isError = false) {
+function setStatus(message, tone = "") {
   statusEl.textContent = message;
-  statusEl.className = isError ? "error" : "";
+  statusEl.className = tone;
 }
 
 async function runWithStatus(pendingMessage, work) {
@@ -168,7 +183,7 @@ async function runWithStatus(pendingMessage, work) {
   try {
     await work();
   } catch (error) {
-    setStatus(error.message, true);
+    setStatus(error.message, "error");
   } finally {
     setBusy(false);
   }
