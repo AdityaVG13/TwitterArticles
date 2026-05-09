@@ -7,6 +7,7 @@ import {
   defaultAllowedOrigins,
   parseAllowedOrigins,
 } from "./access-control.mjs";
+import { formatBatchZipName, uniqueZipName } from "./batch-zip.mjs";
 import { normalizeCapturedArticle } from "./capture.mjs";
 import { downloadFilePath } from "./download-paths.mjs";
 import { extractArticle } from "./extractor.mjs";
@@ -175,6 +176,88 @@ app.post("/api/save-capture", async (req, res) => {
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
+});
+
+app.post("/api/save-batch", async (req, res) => {
+  const startedAt = Date.now();
+  const rawArticles = Array.isArray(req.body.articles) ? req.body.articles : [];
+  if (!rawArticles.length) {
+    res
+      .status(400)
+      .json({ ok: false, error: "Batch requires at least one article." });
+    return;
+  }
+
+  let formats;
+  try {
+    formats = parseFormats(req.body.formats);
+  } catch (error) {
+    res.status(400).json({ ok: false, error: error.message });
+    return;
+  }
+
+  const runId = new Date().toISOString().replace(/[:.]/g, "-");
+  const runDir = path.join(downloadRoot, runId);
+  await mkdir(runDir, { recursive: true });
+
+  const successes = [];
+  const failures = [];
+  const filesForZip = [];
+  const zipEntryNames = [];
+
+  for (const raw of rawArticles) {
+    let article;
+    try {
+      article = normalizeCapturedArticle(raw);
+    } catch (error) {
+      failures.push({
+        url: raw?.sourceUrl || raw?.finalUrl || "",
+        error: error.message,
+      });
+      continue;
+    }
+
+    try {
+      const files = await saveArticleFiles(article, formats, runDir);
+      successes.push({
+        url: article.sourceUrl,
+        title: article.title,
+        files: files.map((file) => toDownloadResponse(runId, file)),
+      });
+      for (const file of files) {
+        const entryName = uniqueZipName(file.name, zipEntryNames);
+        zipEntryNames.push(entryName);
+        filesForZip.push({ path: file.path, name: entryName });
+      }
+    } catch (error) {
+      failures.push({
+        url: article.sourceUrl,
+        error: error.message,
+      });
+    }
+  }
+
+  if (!successes.length) {
+    res.status(502).json({
+      ok: false,
+      elapsedMs: Date.now() - startedAt,
+      successes,
+      failures,
+    });
+    return;
+  }
+
+  const zipName = formatBatchZipName(new Date());
+  const zipped = await zipFiles(filesForZip, path.join(runDir, zipName));
+  const zip = toDownloadResponse(runId, zipped);
+
+  res.json({
+    ok: true,
+    elapsedMs: Date.now() - startedAt,
+    successes,
+    failures,
+    zip,
+  });
 });
 
 app.get("/downloads/:runId/:fileName", (req, res) => {

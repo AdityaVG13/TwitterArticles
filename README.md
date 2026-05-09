@@ -9,12 +9,13 @@ Export X Articles and long-form status pages from your own browser session to Ma
 
 The app is local-first. Article content is processed on your machine, the web server binds to `127.0.0.1`, and authenticated captures reuse your own Chrome profile through Browser Harness.
 
-| Use case                         | Best path                    |
-| -------------------------------- | ---------------------------- |
-| Paste one or many X URLs         | Run the local web UI         |
-| Save the current rendered tab    | Install the Chrome extension |
-| Automate exports from scripts    | Use the CLI                  |
-| Capture gated or logged-in pages | Use Browser Harness login    |
+| Use case                         | Best path                        |
+| -------------------------------- | -------------------------------- |
+| Paste one or many X URLs         | Run the local web UI             |
+| Save the current rendered tab    | Extension popup, **Single** mode |
+| Save many tabs as one ZIP        | Extension popup, **Batch** mode  |
+| Automate exports from scripts    | Use the CLI                      |
+| Capture gated or logged-in pages | Use Browser Harness login        |
 
 Generated file names use the article title and tweet author when page metadata is available.
 
@@ -78,9 +79,16 @@ uv tool install -e .
 browser-harness --setup
 ```
 
-## Chrome Extension
+## Browser Extension
 
-The extension gives you one-click export from the current X Article or status tab. In native mode, it starts the local server when needed, captures the rendered tab, exports files, and downloads the result.
+The toolbar extension exports the current rendered X Article (Single mode) or queues many tabs into a single archive (Batch mode). In native mode, the extension starts and stops the local server on demand. See [Capture Modes](#capture-modes) for the popup UI.
+
+| Browser                               | Install                                 |
+| ------------------------------------- | --------------------------------------- |
+| Chrome, Edge, Brave, Chromium, Canary | [Chrome Extension](#chrome-extension)   |
+| Firefox 115+                          | [Firefox Extension](#firefox-extension) |
+
+### Chrome Extension
 
 Install the Native Messaging host for Google Chrome:
 
@@ -126,7 +134,7 @@ Remove the Native Messaging host:
 npm run uninstall-native
 ```
 
-## Firefox Extension
+### Firefox Extension
 
 Firefox uses a separate built extension directory and its own Native Messaging host registration. The build script transforms the Chrome MV3 manifest into a Firefox-compatible event-page MV3 manifest with a stable gecko id.
 
@@ -163,6 +171,86 @@ Remove the Firefox host:
 ```sh
 npm run uninstall-native -- --browser firefox
 ```
+
+## Capture Modes
+
+Click the extension toolbar icon to open the popup. Toggle between two modes at the top.
+
+### Single
+
+Capture the current tab and download it in the configured formats.
+
+```text
+┌──────────────────────────────────────────────────────┐
+│  X Article Downloader                                │
+│                                                      │
+│  ┌─────────────────┐┌─────────────────┐              │
+│  │  ● Single       ││    Batch        │              │
+│  └─────────────────┘└─────────────────┘              │
+│                                                      │
+│  Capture the current X Article tab.                  │
+│                                                      │
+│  ┌─────────────────────┐                             │
+│  │  Capture this tab   │                             │
+│  └─────────────────────┘                             │
+│                                                      │
+│  Saved 1 file.                            Options →  │
+└──────────────────────────────────────────────────────┘
+```
+
+### Batch
+
+Queue tabs from anywhere in your browser, review them in the dashboard, then download every queued article in one archive.
+
+```text
+┌──────────────────────────────────────────────────────┐
+│  X Article Downloader                                │
+│                                                      │
+│  ┌─────────────────┐┌─────────────────┐              │
+│  │    Single       ││  ● Batch        │              │
+│  └─────────────────┘└─────────────────┘              │
+│                                                      │
+│  ┌─────────────────────┐               3 queued      │
+│  │    Add this tab     │                             │
+│  └─────────────────────┘                             │
+│                                                      │
+│  ┌────────────────────────────────────────────────┐  │
+│  │ Why agents will eat the IDE     @balajis     × │  │
+│  │ Notes on local-first software   @inkswitch   × │  │
+│  │ A short essay on quiet UI       @rms         × │  │
+│  └────────────────────────────────────────────────┘  │
+│                                                      │
+│  Formats   [x] Markdown    [ ] PDF    [ ] DOCX       │
+│                                                      │
+│  ┌──────────────────┐  ┌─────────┐                   │
+│  │   Save to ZIP    │  │  Clear  │                   │
+│  └──────────────────┘  └─────────┘                   │
+│                                                      │
+│  Saved 3 article(s). ZIP downloaded.      Options →  │
+└──────────────────────────────────────────────────────┘
+```
+
+The toolbar badge shows the queue count while batch mode is active:
+
+```text
+   ┌──────┐
+   │  ▣ 3 │
+   └──────┘
+```
+
+### Output
+
+`Save to ZIP` writes a single archive to your browser's default download location. Each article inside is named by its title and author. Up to 50 articles per batch.
+
+```text
+~/Downloads/
+└── Twitter Download - 2026-05-09.zip
+    ├── Why agents will eat the IDE - @balajis.md
+    ├── Notes on local-first software - @inkswitch.md
+    └── A short essay on quiet UI - @rms.md
+```
+
+The mode is stored per browser profile and persists across sessions. It is also reachable from the options page.
 
 ## Authenticated Pages
 

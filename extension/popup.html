@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>X Article Downloader</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>X Article Downloader</h1>
+        <div class="mode-toggle" role="group" aria-label="Capture mode">
+          <button type="button" id="modeSingle" class="mode" data-mode="single">
+            Single
+          </button>
+          <button type="button" id="modeBatch" class="mode" data-mode="batch">
+            Batch
+          </button>
+        </div>
+      </header>
+
+      <section id="singleView" hidden>
+        <p class="hint">Capture the current X Article tab.</p>
+        <button type="button" id="captureSingleBtn" class="primary">
+          Capture this tab
+        </button>
+      </section>
+
+      <section id="batchView" hidden>
+        <div class="row">
+          <button type="button" id="addTabBtn" class="primary">
+            Add this tab
+          </button>
+          <span id="queueCount" class="count">0 queued</span>
+        </div>
+        <ul id="queueList" class="queue" aria-live="polite"></ul>
+
+        <fieldset class="formats">
+          <legend>Formats</legend>
+          <label
+            ><input type="checkbox" name="formats" value="md" /> Markdown</label
+          >
+          <label
+            ><input type="checkbox" name="formats" value="pdf" /> PDF</label
+          >
+          <label
+            ><input type="checkbox" name="formats" value="docx" /> DOCX</label
+          >
+        </fieldset>
+
+        <div class="actions">
+          <button type="button" id="saveZipBtn" class="primary">
+            Save to ZIP
+          </button>
+          <button type="button" id="clearBtn">Clear</button>
+        </div>
+      </section>
+
+      <p id="status" aria-live="polite"></p>
+      <footer>
+        <a href="#" id="openOptions">Options</a>
+      </footer>
+    </main>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
