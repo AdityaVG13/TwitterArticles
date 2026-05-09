@@ -12,6 +12,9 @@ form.serverOrigin.value = stored.serverOrigin || DEFAULT_OPTIONS.serverOrigin;
 form.querySelector(
   `input[name="serverMode"][value="${stored.serverMode || DEFAULT_OPTIONS.serverMode}"]`
 ).checked = true;
+form.querySelector(
+  `input[name="captureMode"][value="${stored.captureMode || DEFAULT_OPTIONS.captureMode}"]`
+).checked = true;
 for (const input of form.querySelectorAll('input[name="formats"]')) {
   input.checked = (stored.formats || DEFAULT_OPTIONS.formats).includes(
     input.value
@@ -36,6 +39,8 @@ form.addEventListener("submit", async (event) => {
     await chrome.storage.sync.set({
       serverOrigin: normalizeServerOrigin(form.serverOrigin.value),
       serverMode: form.querySelector('input[name="serverMode"]:checked').value,
+      captureMode: form.querySelector('input[name="captureMode"]:checked')
+        .value,
       formats,
       zip: form.zip.checked,
     });

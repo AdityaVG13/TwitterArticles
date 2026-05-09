@@ -3,7 +3,10 @@ export const DEFAULT_OPTIONS = {
   serverMode: "native",
   formats: ["md"],
   zip: true,
+  captureMode: "single",
 };
+
+export const BATCH_QUEUE_LIMIT = 50;
 
 export const NATIVE_HOST_NAME = "org.x_article_downloader.native_host";
 

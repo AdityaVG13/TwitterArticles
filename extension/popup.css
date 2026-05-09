@@ -1,0 +1,234 @@
+:root {
+  color-scheme: light;
+  --text: #17201b;
+  --muted: #66736b;
+  --line: #dce2db;
+  --accent: #005f73;
+  --danger: #9f1d2f;
+  --bg: #f6f7f4;
+  --surface: #ffffff;
+}
+
+body {
+  margin: 0;
+  width: 360px;
+  color: var(--text);
+  background: var(--bg);
+  font:
+    13px/1.45 ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+main {
+  padding: 14px;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.mode {
+  flex: 1;
+  padding: 7px 10px;
+  border: 0;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.mode[aria-pressed="true"] {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+section {
+  display: grid;
+  gap: 10px;
+}
+
+button.primary {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button.primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button:not(.primary):not(.mode):not(.icon) {
+  border: 1px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.count {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+}
+
+.queue {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  padding: 6px;
+}
+
+.queue:empty::after {
+  content: "No articles queued.";
+  color: var(--muted);
+  display: block;
+  padding: 6px 4px;
+  font-size: 12px;
+}
+
+.queue li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: start;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.queue .meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.queue .title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue .byline {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+button.icon {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+button.icon:hover {
+  color: var(--danger);
+}
+
+fieldset.formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px 10px;
+  margin: 0;
+}
+
+fieldset.formats legend {
+  padding: 0 4px;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+fieldset.formats label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+#status {
+  min-height: 18px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+#status.error {
+  color: var(--danger);
+}
+
+footer {
+  margin-top: 10px;
+  text-align: right;
+  font-size: 12px;
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
