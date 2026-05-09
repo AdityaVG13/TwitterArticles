@@ -14,7 +14,9 @@ if (paths.platform === "win32") {
   });
 }
 await rm(paths.manifestPath, { force: true });
-await rm(paths.supportDir, { recursive: true, force: true });
+if (paths.platform === "win32" && paths.manifestDir !== paths.supportDir) {
+  await rm(paths.manifestDir, { recursive: true, force: true });
+}
 
 console.log(`Removed native host manifest: ${paths.manifestPath}`);
 if (paths.registryKey) {

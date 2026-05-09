@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   EXTENSION_ID,
+  FIREFOX_EXTENSION_ID,
   nativeHostInstallPaths,
   nativeHostManifest,
 } from "./native-host-config.mjs";
@@ -14,7 +15,13 @@ const rootDir = path.resolve(__dirname, "..");
 const hostPath = path.join(rootDir, "native-host", "host.mjs");
 const browser = parseBrowserArg(process.argv.slice(2));
 const paths = nativeHostInstallPaths({ browser });
-const manifest = nativeHostManifest(paths.wrapperPath, EXTENSION_ID);
+const extensionId =
+  paths.family === "firefox" ? FIREFOX_EXTENSION_ID : EXTENSION_ID;
+const manifest = nativeHostManifest(paths.wrapperPath, extensionId, browser);
+
+if (paths.family === "firefox") {
+  await runNode([path.join(rootDir, "scripts", "build-firefox.mjs")]);
+}
 
 await mkdir(paths.manifestDir, { recursive: true });
 await mkdir(paths.supportDir, { recursive: true });
@@ -58,10 +65,19 @@ console.log(`Installed native host manifest: ${paths.manifestPath}`);
 if (paths.registryKey) {
   console.log(`Registered Windows key: ${paths.registryKey}`);
 }
-console.log(`Extension ID: ${EXTENSION_ID}`);
-console.log(
-  `Load unpacked extension directory: ${path.join(rootDir, "extension")}`
-);
+console.log(`Extension ID: ${extensionId}`);
+const extensionDir =
+  paths.family === "firefox"
+    ? path.join(rootDir, "extension-firefox")
+    : path.join(rootDir, "extension");
+if (paths.family === "firefox") {
+  console.log(`Load temporary add-on manifest: ${extensionDir}`);
+  console.log(
+    "Open about:debugging#/runtime/this-firefox, click Load Temporary Add-on, select manifest.json."
+  );
+} else {
+  console.log(`Load unpacked extension directory: ${extensionDir}`);
+}
 
 function parseBrowserArg(args) {
   const browserIndex = args.findIndex((arg) => arg === "--browser");
@@ -114,6 +130,20 @@ function run(command, args) {
         resolve();
       } else {
         reject(new Error(stderr.trim() || `${command} exited with ${code}`));
+      }
+    });
+  });
+}
+
+function runNode(args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, args, { stdio: "inherit" });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Firefox build exited with ${code}`));
       }
     });
   });

@@ -126,6 +126,44 @@ Remove the Native Messaging host:
 npm run uninstall-native
 ```
 
+## Firefox Extension
+
+Firefox uses a separate built extension directory and its own Native Messaging host registration. The build script transforms the Chrome MV3 manifest into a Firefox-compatible event-page MV3 manifest with a stable gecko id.
+
+Install the Native Messaging host for Firefox (also runs the build):
+
+```sh
+npm run install-native -- --browser firefox
+```
+
+This writes `extension-firefox/` and registers the host under the Mozilla Native Messaging path (`HKCU\Software\Mozilla\NativeMessagingHosts\...` on Windows, `Library/Application Support/Mozilla/NativeMessagingHosts` on macOS, `.mozilla/native-messaging-hosts` on Linux).
+
+Load the temporary add-on:
+
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Click `Load Temporary Add-on`.
+3. Choose `extension-firefox/manifest.json`.
+
+Firefox extension id:
+
+```text
+x-article-downloader@native.local
+```
+
+Temporary add-ons are removed when Firefox restarts. To persist across restarts, sign and submit through addons.mozilla.org or run an Unbranded/Developer Edition build with signature checks disabled.
+
+Build the Firefox extension without registering the host:
+
+```sh
+npm run build:firefox
+```
+
+Remove the Firefox host:
+
+```sh
+npm run uninstall-native -- --browser firefox
+```
+
 ## Authenticated Pages
 
 Use this when X returns a login wall, rate-limit page, interstitial, or incomplete article.
