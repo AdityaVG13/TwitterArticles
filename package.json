@@ -41,8 +41,7 @@
     "test:pdf": "XAD_TEST_PDF=1 node --test test/exporters.test.mjs",
     "audit": "npm audit --omit=dev --audit-level=high",
     "security:scan": "bash scripts/security-scan.sh",
-    "security:virustotal": "node scripts/virustotal-scan.mjs",
-    "prepare": "husky"
+    "security:virustotal": "node scripts/virustotal-scan.mjs"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
@@ -55,8 +54,6 @@
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "web-ext": "^8.10.0"
   }
