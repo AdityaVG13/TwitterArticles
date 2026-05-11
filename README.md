@@ -1,74 +1,97 @@
+<div align="center">
+
+<img src="extension/icons/icon-128.png" alt="X Article Downloader" width="96" height="96">
+
 # X Article Downloader
+
+**Save X Articles and long-form posts to Markdown, PDF, DOCX, or ZIP — on your own machine.**
 
 [![Node.js 20+](https://img.shields.io/badge/Node.js-20%2B-2f6f4e?style=flat-square)](#requirements)
 [![License MIT](https://img.shields.io/badge/license-MIT-2f2f2f?style=flat-square)](LICENSE)
 [![Local first](https://img.shields.io/badge/local--first-no%20cloud%20upload-3f5f7f?style=flat-square)](#security-model)
+[![Chrome + Firefox](https://img.shields.io/badge/browser-Chrome%20%2B%20Firefox-d97757?style=flat-square)](#browser-extension)
 [![Support on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-ff5f5f?style=flat-square&logo=ko-fi&logoColor=white)](https://ko-fi.com/adityavg13)
 
-Export X Articles and long-form status pages from your own browser session to Markdown, PDF, DOCX, or ZIP.
+</div>
 
-The app is local-first. Article content is processed on your machine, the web server binds to `127.0.0.1`, and authenticated captures reuse your own Chrome profile through Browser Harness.
+The server binds to `127.0.0.1`, the extension only talks to that loopback origin, and authenticated captures reuse your own browser session through Browser Harness. Nothing is uploaded.
 
-| Use case                         | Best path                        |
-| -------------------------------- | -------------------------------- |
-| Paste one or many X URLs         | Run the local web UI             |
-| Save the current rendered tab    | Extension popup, **Single** mode |
-| Save many tabs as one ZIP        | Extension popup, **Batch** mode  |
-| Automate exports from scripts    | Use the CLI                      |
-| Capture gated or logged-in pages | Use Browser Harness login        |
+| You want to...                       | Use                              |
+| ------------------------------------ | -------------------------------- |
+| Paste one or many X URLs             | Local web UI (`npm start`)       |
+| Save the X tab you're looking at     | Extension popup, **Single** mode |
+| Queue several tabs into one ZIP      | Extension popup, **Batch** mode  |
+| Capture a logged-in or gated page    | `npm run login` + Browser Harness |
+| Script exports                       | CLI (`src/cli.mjs`)              |
 
 Generated file names use the article title and tweet author when page metadata is available.
 
-## AI Install Prompt
-
-Paste this into an AI coding agent with terminal access, along with this repository's URL.
-
-<details open>
-<summary>Copy-paste install prompt</summary>
-
-```text
-Install X Article Downloader from the repository URL I provide.
-
-Use a clean working directory. Detect my OS. Make sure Git, Node.js 20 or newer, uv, and Chrome are installed. Clone the repository, run npm install, then run npm run doctor.
-
-If Browser Harness is missing, install it from its official repository using the README commands, then rerun npm run doctor. After the doctor passes, run npm run install-native for Google Chrome. Tell me the extension directory printed by the installer and walk me through loading it in chrome://extensions with Developer mode enabled.
-
-Do not ask me for secrets. Do not modify the project source. Stop and show the exact command output if any step fails.
-```
-
-</details>
+---
 
 ## Quick Start
 
-Install dependencies and run the doctor:
+From a fresh clone of this repo:
 
 ```sh
 npm install
 npm run doctor
 ```
 
-Start the local UI:
+Then pick one:
+
+**Web UI** — paste URLs, click download.
 
 ```sh
 npm start
+# open http://127.0.0.1:4512
 ```
 
-Open:
+**Browser extension** — capture the tab you're already reading.
+
+```sh
+# Chrome / Edge / Brave
+npm run install-native
+# then load extension/ at chrome://extensions (Developer mode on)
+
+# Firefox -- one command, opens a dev profile with the extension preloaded
+npm run install-native -- --browser firefox
+npm run run:firefox
+```
+
+Files land in `./downloads/` (web UI / CLI) or your browser's default downloads folder (extension).
+
+<details>
+<summary><strong>AI install prompt</strong> — paste into an agent with terminal access</summary>
 
 ```text
-http://127.0.0.1:4512
+Install X Article Downloader from the repository URL I provide.
+
+Use a clean working directory. Detect my OS. Make sure Git, Node.js 20 or
+newer, uv, and Chrome are installed. Clone the repository, run npm install,
+then run npm run doctor.
+
+If Browser Harness is missing, install it from its official repository using
+the README commands, then rerun npm run doctor. After the doctor passes, run
+npm run install-native for Google Chrome. Tell me the extension directory
+printed by the installer and walk me through loading it in chrome://extensions
+with Developer mode enabled.
+
+Do not ask me for secrets. Do not modify the project source. Stop and show
+the exact command output if any step fails.
 ```
 
-Paste X Article or status URLs, choose formats, and download the results. Files are written to `downloads/`.
+</details>
+
+---
 
 ## Requirements
 
-| Requirement                        | Why it is needed                                        |
-| ---------------------------------- | ------------------------------------------------------- |
-| Node.js 20 or newer                | Runs the local server, CLI, exporters, and native host  |
-| Browser Harness on `PATH`          | Opens Chrome and captures authenticated pages           |
-| Chrome on macOS, Linux, or Windows | Required for the Native Messaging installer             |
-| uv                                 | Installs Browser Harness if it is not already available |
+| Requirement                | Why                                                     |
+| -------------------------- | ------------------------------------------------------- |
+| Node.js 20+                | Runs the local server, CLI, exporters, and native host  |
+| Browser Harness on `PATH`  | Opens Chrome and captures authenticated pages           |
+| Chrome **or** Firefox 115+ | Hosts the extension and the Native Messaging registration |
+| uv                         | Installs Browser Harness if it isn't already available  |
 
 Install Browser Harness if `npm run doctor` reports it missing:
 
@@ -79,45 +102,33 @@ uv tool install -e .
 browser-harness --setup
 ```
 
+---
+
 ## Browser Extension
 
-The toolbar extension exports the current rendered X Article (Single mode) or queues many tabs into a single archive (Batch mode). In native mode, the extension starts and stops the local server on demand. See [Capture Modes](#capture-modes) for the popup UI.
+Toolbar button → capture the X Article in the active tab, or queue several tabs and ZIP them together. The extension launches the local server on demand (managed mode) and stops it after the idle timeout when you walk away.
 
-| Browser                               | Install                                 |
-| ------------------------------------- | --------------------------------------- |
-| Chrome, Edge, Brave, Chromium, Canary | [Chrome Extension](#chrome-extension)   |
-| Firefox 115+                          | [Firefox Extension](#firefox-extension) |
+<div align="center">
 
-### Chrome Extension
+<img src="extension/icons/icon-128.png" alt="App icon" width="64" height="64">
 
-Install the Native Messaging host for Google Chrome:
+</div>
+
+### Chrome, Edge, Brave, Chromium, Canary
 
 ```sh
 npm run install-native
 ```
 
-Load the unpacked extension:
+Then load the unpacked extension:
 
-1. Open `chrome://extensions`.
-2. Enable Developer mode.
-3. Click Load unpacked.
-4. Choose the `extension/` directory from this repo.
+1. Open `chrome://extensions`
+2. Toggle **Developer mode**
+3. **Load unpacked** → select the `extension/` directory
 
-The installer prints the extension directory, extension ID, manifest path, and local launcher path. The default unpacked extension ID is:
+The default unpacked extension ID is `hphgjlnkhoocfnhpdabnhjddfdknkmkd`. The installer prints the extension directory, manifest path, and launcher path.
 
-```text
-hphgjlnkhoocfnhpdabnhjddfdknkmkd
-```
-
-Google Chrome Native Messaging install support:
-
-| OS      | Default command          |
-| ------- | ------------------------ |
-| macOS   | `npm run install-native` |
-| Linux   | `npm run install-native` |
-| Windows | `npm run install-native` |
-
-Additional macOS browser targets:
+Other Chromium targets on macOS:
 
 ```sh
 npm run install-native -- --browser canary
@@ -126,59 +137,60 @@ npm run install-native -- --browser brave
 npm run install-native -- --browser edge
 ```
 
-When the extension disconnects, the managed server shuts down after its idle timeout.
-
-Remove the Native Messaging host:
+Uninstall:
 
 ```sh
 npm run uninstall-native
 ```
 
-### Firefox Extension
+### Firefox 115+
 
-Firefox uses a separate built extension directory and its own Native Messaging host registration. The build script transforms the Chrome MV3 manifest into a Firefox-compatible event-page MV3 manifest with a stable gecko id.
+Firefox uses a separate built directory (`extension-firefox/`) with a Firefox-flavored MV3 manifest. The build script transforms the Chrome manifest into a Gecko-compatible one with a stable extension id.
 
-Install the Native Messaging host for Firefox (also runs the build):
+First, install the Firefox Native Messaging host (also runs the build):
 
 ```sh
 npm run install-native -- --browser firefox
 ```
 
-This writes `extension-firefox/` and registers the host under the Mozilla Native Messaging path (`HKCU\Software\Mozilla\NativeMessagingHosts\...` on Windows, `Library/Application Support/Mozilla/NativeMessagingHosts` on macOS, `.mozilla/native-messaging-hosts` on Linux).
+Then pick how you want to load the extension.
 
-Pick one of the install paths below.
+<table>
+<tr><th width="33%">A. One-command dev run <em>(recommended)</em></th><th width="33%">B. Drag-and-drop XPI</th><th width="33%">C. Manual sideload</th></tr>
+<tr><td>
 
-#### Option A — One-command dev run (recommended)
-
-Builds the Firefox extension and launches a persistent dev profile with the add-on auto-loaded. No manual `about:debugging` clicks; the profile lives in `.xad-browser-profile/firefox/` and is reused on every run, so your login and extension settings persist between sessions.
+Builds the extension and launches Firefox with a persisted dev profile and the add-on auto-loaded. Login and settings survive between runs.
 
 ```sh
 npm run run:firefox
 ```
 
-Same command for Chrome (uses the Chromium target):
+Same flow for Chromium:
 
 ```sh
 npm run run:chrome
 ```
 
-#### Option B — Drag-and-drop XPI
+</td><td>
 
-Produces an unsigned `.xpi` you can drag into `about:addons` on Firefox Developer Edition, Nightly, or ESR (with `xpinstall.signatures.required` set to `false` in `about:config`). Survives browser restarts without going through addons.mozilla.org.
+Produces an unsigned `.xpi` you can drag into `about:addons` on Firefox **Developer Edition, Nightly, or ESR** with `xpinstall.signatures.required = false` set in `about:config`. Persists across browser restarts.
 
 ```sh
 npm run package:firefox
-# artifact: dist/x_article_downloader-<version>.zip
+# dist/x_article_downloader-<v>.zip
 ```
 
-#### Option C — Manual temporary add-on
+</td><td>
 
-Useful when you don't want extra processes. Add-on is removed on Firefox restart.
+Stock Firefox, no extra processes. Add-on is removed when Firefox restarts.
 
-1. Run `npm run build:firefox` to produce `extension-firefox/`.
-2. Open `about:debugging#/runtime/this-firefox`.
-3. Click `Load Temporary Add-on`.
-4. Choose `extension-firefox/manifest.json`.
+1. `npm run build:firefox`
+2. `about:debugging#/runtime/this-firefox`
+3. **Load Temporary Add-on**
+4. Pick `extension-firefox/manifest.json`
+
+</td></tr>
+</table>
 
 Firefox extension id:
 
@@ -186,15 +198,17 @@ Firefox extension id:
 x-article-downloader@native.local
 ```
 
-Remove the Firefox host:
+Uninstall the host:
 
 ```sh
 npm run uninstall-native -- --browser firefox
 ```
 
+---
+
 ## Capture Modes
 
-Click the extension toolbar icon to open the popup. Toggle between two modes at the top.
+Click the toolbar icon to open the popup. Two modes, toggled at the top.
 
 ### Single
 
@@ -220,7 +234,7 @@ Capture the current tab and download it in the configured formats.
 
 ### Batch
 
-Queue tabs from anywhere in your browser, review them in the dashboard, then download every queued article in one archive.
+Queue tabs from anywhere in your browser, review them, then download the whole queue as one archive (up to 50 articles).
 
 ```text
 ┌──────────────────────────────────────────────────────┐
@@ -250,17 +264,9 @@ Queue tabs from anywhere in your browser, review them in the dashboard, then dow
 └──────────────────────────────────────────────────────┘
 ```
 
-The toolbar badge shows the queue count while batch mode is active:
+The toolbar badge shows the queue count while batch mode is active.
 
-```text
-   ┌──────┐
-   │  ▣ 3 │
-   └──────┘
-```
-
-### Output
-
-`Save to ZIP` writes a single archive to your browser's default download location. Each article inside is named by its title and author. Up to 50 articles per batch.
+The ZIP lands in your browser's default download folder. Each article is named by its title and author:
 
 ```text
 ~/Downloads/
@@ -270,19 +276,21 @@ The toolbar badge shows the queue count while batch mode is active:
     └── A short essay on quiet UI - @rms.md
 ```
 
-The mode is stored per browser profile and persists across sessions. It is also reachable from the options page.
+Mode is stored per browser profile and survives sessions. The options page exposes the same toggle.
+
+---
 
 ## Authenticated Pages
 
-Use this when X returns a login wall, rate-limit page, interstitial, or incomplete article.
+When X returns a login wall, interstitial, rate-limit page, or incomplete article:
 
 ```sh
 npm run login
 ```
 
-Log in to X in the opened browser. Wait for the home timeline or Articles page to load, then press Enter in the terminal.
+Log into X in the opened browser. Wait for the home timeline or Articles page to load, then press Enter in the terminal. Cookies stay in the Chrome profile Browser Harness controls. The app never asks for your X credentials.
 
-Browser Harness stores cookies in the Chrome profile it controls. The app does not ask for your X credentials.
+---
 
 ## CLI
 
@@ -300,9 +308,9 @@ Options:
 --zip                   Create x-articles.zip
 ```
 
-## Browser Harness Helper
+### Browser Harness helper
 
-Capture the current logged-in tab from Browser Harness:
+Capture the tab you're already logged into:
 
 ```sh
 npm start
@@ -313,9 +321,12 @@ print(download_current_x_article(formats=["md", "pdf", "docx"]))
 PY
 ```
 
+---
+
 ## Configuration
 
-Environment variables:
+<details>
+<summary>Environment variables</summary>
 
 ```text
 XAD_PORT=4512
@@ -327,71 +338,69 @@ XAD_NATIVE_IDLE_MS=180000
 XAD_NATIVE_START_TIMEOUT_MS=15000
 ```
 
-By default, the server trusts its loopback web UI origins and the bundled extension ID.
+By default the server trusts its loopback web UI origins, the bundled Chrome extension id, and any `moz-extension://` origin (Firefox UUIDs are profile-random for unsigned installs; the real access gate is the native host's `allowed_extensions` list). Set `XAD_ALLOWED_ORIGINS` explicitly if you're hosting the extension under a different Chrome key.
 
-If you build the extension with a different key, set `XAD_ALLOWED_ORIGINS` to include that extension origin.
+</details>
+
+---
 
 ## Security Model
 
-- The server binds only to `127.0.0.1`.
-- Article content is processed locally and is not uploaded to a third-party service.
-- The extension and Native Messaging host accept only loopback HTTP server origins with explicit user ports.
-- Browser API requests are protected by an origin allowlist and security headers.
+- Server binds to `127.0.0.1` only.
+- Article content is processed locally; nothing leaves the machine.
+- The extension and Native Messaging host accept only loopback HTTP origins with explicit user ports.
+- Browser API requests pass through an origin allowlist and security headers; non-JSON responses surface their HTTP status and body snippet instead of crashing the popup.
 - Download paths are validated before files are served.
-- `/health` does not expose your local output directory.
-- Browser automation uses Browser Harness only.
+- `/health` does not expose your output directory.
+- Browser automation is Browser Harness only.
 
-See [SECURITY.md](SECURITY.md) for permissions, threat model details, and release checks.
+See [SECURITY.md](SECURITY.md) for permissions, threat model, and release checks.
+
+---
 
 ## Notes
 
-- Default input is restricted to `x.com`, `twitter.com`, and `mobile.twitter.com`.
-- Markdown and PDF preserve images as remote links or assets.
+- Input is restricted to `x.com`, `twitter.com`, and `mobile.twitter.com`.
+- Markdown and PDF preserve images as remote links or embedded assets.
 - DOCX preserves text structure and image URLs.
-- Use this for content you have rights to access and store.
+- Use only for content you have rights to access and store.
+
+---
 
 ## Development
 
-Core checks:
-
 ```sh
-npm run format:check
-npm run check
-npm test
-npm run audit
+npm run format:check    # prettier
+npm run check           # syntax + manifest sanity
+npm test                # full suite (60 tests)
+npm run audit           # production deps only
 ```
 
-Optional PDF smoke test:
+Icon pipeline (master SVG → 16/32/48/128 PNGs via `@resvg/resvg-js`):
 
 ```sh
-npm run test:pdf
+npm run build:icons
 ```
 
-Local artifact malware/security scan:
+Optional checks:
 
 ```sh
-npm run security:scan
-```
-
-Optional VirusTotal hash lookup:
-
-```sh
+npm run test:pdf                   # PDF exporter smoke test
+npm run security:scan              # local artifact scan
 VIRUSTOTAL_API_KEY=... npm run security:virustotal
 ```
 
-Submit the generated package artifact to VirusTotal:
+---
 
-```sh
-VIRUSTOTAL_API_KEY=... npm run security:virustotal -- --upload
-```
+## Support
 
-Pre-commit hooks run staged formatting, syntax checks, and tests.
+If this saves you time, donations keep maintenance, testing, and new tooling moving.
 
-## Support This Work
-
-If X Article Downloader saves you time, donations help fund maintenance, testing, documentation, and more open-source tools.
+<div align="center">
 
 [![Support on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-ff5f5f?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/adityavg13)
+
+</div>
 
 ## License
 
