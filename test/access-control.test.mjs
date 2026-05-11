@@ -46,6 +46,27 @@ test("access control allows native extension requests", async () => {
   }
 });
 
+test("access control allows Firefox extension origins regardless of UUID", async () => {
+  const server = await startServer(
+    createAccessControlMiddleware({
+      allowedOrigins: ["http://127.0.0.1:4512"],
+    })
+  );
+  try {
+    const response = await request(server, {
+      method: "POST",
+      origin: "moz-extension://abcdef12-3456-7890-abcd-ef1234567890",
+    });
+    assert.equal(response.statusCode, 200);
+    assert.equal(
+      response.headers["access-control-allow-origin"],
+      "moz-extension://abcdef12-3456-7890-abcd-ef1234567890"
+    );
+  } finally {
+    server.close();
+  }
+});
+
 test("access control rejects unknown browser origins", async () => {
   const server = await startServer(
     createAccessControlMiddleware({

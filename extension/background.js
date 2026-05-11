@@ -134,6 +134,18 @@ async function captureActiveTab() {
   return capture.result.article;
 }
 
+async function parseJsonResponse(response) {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const snippet = text.trim().slice(0, 200) || "(empty response)";
+    throw new Error(
+      `Local server returned non-JSON (HTTP ${response.status}): ${snippet}`
+    );
+  }
+}
+
 async function downloadFile(serverOrigin, file) {
   const absoluteUrl = new URL(file.url, serverOrigin).toString();
   await chrome.downloads.download({
@@ -159,7 +171,7 @@ async function runSingleCapture() {
         zip: options.zip,
       }),
     });
-    const result = await response.json();
+    const result = await parseJsonResponse(response);
     if (!response.ok || !result.ok) {
       throw new Error(result.error || `Server returned ${response.status}`);
     }
@@ -218,7 +230,7 @@ async function saveBatchAsZip() {
         formats: options.formats,
       }),
     });
-    const result = await response.json();
+    const result = await parseJsonResponse(response);
     if (!response.ok || !result.ok) {
       throw new Error(result.error || `Server returned ${response.status}`);
     }
@@ -250,7 +262,11 @@ async function handleRuntimeMessage(message) {
     const options = await getOptions();
     if (options.serverMode === "manual") {
       const response = await fetch(`${options.serverOrigin}/health`);
-      return { ok: response.ok, manual: true, server: await response.json() };
+      return {
+        ok: response.ok,
+        manual: true,
+        server: await parseJsonResponse(response),
+      };
     }
 
     const response = await nativeRequest(
