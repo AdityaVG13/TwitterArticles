@@ -158,3 +158,9 @@ globalThis.__xadExtractPage = function __xadExtractPage() {
       .trim();
   }
 };
+
+// Firefox executeScript({files}) resolves with the file's completion value
+// over a structured-clone channel; a bare function assignment leaves the
+// function itself as the completion value, which is not clonable. End with
+// a clonable primitive so injection succeeds on Gecko.
+true;
