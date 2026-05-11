@@ -46,11 +46,6 @@ finally:
         pass
 `;
   const stdout = await runBrowserHarness(script, {
-    args: options.browserHarnessArgs || [
-      "--run-local",
-      "--headless",
-      "about:blank",
-    ],
     timeoutMs: browserHarnessTimeoutMs,
   });
   return parseBrowserHarnessResult(stdout);
@@ -91,14 +86,13 @@ finally:
         pass
 `;
   await runBrowserHarness(script, {
-    args: ["--run-local", "--headless", "about:blank"],
     timeoutMs: options.pdfTimeoutMs || DEFAULT_TIMEOUT_MS,
   });
 }
 
 export async function openLoginWithBrowserHarness(url = "https://x.com/login") {
-  await runBrowserHarness("", {
-    args: ["--launch-local", url],
+  const script = `new_tab(${pythonString(url)})\n`;
+  await runBrowserHarness(script, {
     timeoutMs: DEFAULT_TIMEOUT_MS,
   });
 }
@@ -116,7 +110,7 @@ export function parseBrowserHarnessResult(stdout) {
 
 export function runBrowserHarness(script, options = {}) {
   const command = options.command || browserHarnessCommand();
-  const args = options.args || [];
+  const args = options.args || ["-c", "-"];
   const timeoutMs = options.timeoutMs || DEFAULT_TIMEOUT_MS;
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -156,6 +150,17 @@ export function runBrowserHarness(script, options = {}) {
       clearTimeout(timeout);
       if (code === 0) {
         resolve(stdout);
+        return;
+      }
+      const combined = `${stderr}\n${stdout}`;
+      if (/remote.debugging|Allow remote debugging|chrome:\/\/inspect/i.test(combined)) {
+        reject(
+          new Error(
+            "Browser Harness can't reach Chrome. Open chrome://inspect/#remote-debugging, " +
+              "enable 'Allow remote debugging for this browser instance', then retry. " +
+              "Run `browser-harness --doctor` for details."
+          )
+        );
         return;
       }
       reject(
