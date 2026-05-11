@@ -146,24 +146,44 @@ npm run install-native -- --browser firefox
 
 This writes `extension-firefox/` and registers the host under the Mozilla Native Messaging path (`HKCU\Software\Mozilla\NativeMessagingHosts\...` on Windows, `Library/Application Support/Mozilla/NativeMessagingHosts` on macOS, `.mozilla/native-messaging-hosts` on Linux).
 
-Load the temporary add-on:
+Pick one of the install paths below.
 
-1. Open `about:debugging#/runtime/this-firefox`.
-2. Click `Load Temporary Add-on`.
-3. Choose `extension-firefox/manifest.json`.
+#### Option A — One-command dev run (recommended)
+
+Builds the Firefox extension and launches a persistent dev profile with the add-on auto-loaded. No manual `about:debugging` clicks; the profile lives in `.xad-browser-profile/firefox/` and is reused on every run, so your login and extension settings persist between sessions.
+
+```sh
+npm run run:firefox
+```
+
+Same command for Chrome (uses the Chromium target):
+
+```sh
+npm run run:chrome
+```
+
+#### Option B — Drag-and-drop XPI
+
+Produces an unsigned `.xpi` you can drag into `about:addons` on Firefox Developer Edition, Nightly, or ESR (with `xpinstall.signatures.required` set to `false` in `about:config`). Survives browser restarts without going through addons.mozilla.org.
+
+```sh
+npm run package:firefox
+# artifact: dist/x_article_downloader-<version>.zip
+```
+
+#### Option C — Manual temporary add-on
+
+Useful when you don't want extra processes. Add-on is removed on Firefox restart.
+
+1. Run `npm run build:firefox` to produce `extension-firefox/`.
+2. Open `about:debugging#/runtime/this-firefox`.
+3. Click `Load Temporary Add-on`.
+4. Choose `extension-firefox/manifest.json`.
 
 Firefox extension id:
 
 ```text
 x-article-downloader@native.local
-```
-
-Temporary add-ons are removed when Firefox restarts. To persist across restarts, sign and submit through addons.mozilla.org or run an Unbranded/Developer Edition build with signature checks disabled.
-
-Build the Firefox extension without registering the host:
-
-```sh
-npm run build:firefox
 ```
 
 Remove the Firefox host:

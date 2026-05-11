@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import vm from "node:vm";
 import { JSDOM } from "jsdom";
 import test from "node:test";
 
@@ -41,4 +42,21 @@ test("extension content script captures an article-like page", async () => {
   assert.equal(result.article.title, "Extension Article");
   assert.match(result.article.content, /internal link/);
   assert.match(result.article.content, /https:\/\/x.com\/relative/);
+});
+
+test("extract-page completion value is structured-clonable (Firefox executeScript)", async () => {
+  const script = await readFile(
+    new URL("../extension/content/extract-page.js", import.meta.url),
+    "utf8"
+  );
+  const context = vm.createContext({});
+  const completionValue = vm.runInContext(script, context);
+  assert.doesNotThrow(
+    () => structuredClone(completionValue),
+    "Final statement must evaluate to a structured-clonable value. " +
+      "Firefox scripting.executeScript({files}) returns the script's " +
+      "completion value over a structured-clone channel; a bare " +
+      "function assignment leaves a function as the completion value, " +
+      "which is not clonable."
+  );
 });

@@ -1,5 +1,6 @@
 node_modules/
 downloads/
+dist/
 extension-firefox/
 .xad-browser-profile/
 .env
