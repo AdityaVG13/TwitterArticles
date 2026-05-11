@@ -51,45 +51,6 @@ finally:
   return parseBrowserHarnessResult(stdout);
 }
 
-export async function writeHtmlPdfWithBrowserHarness(
-  html,
-  filePath,
-  options = {}
-) {
-  const script = `
-import base64
-import json
-html = base64.b64decode(${pythonString(Buffer.from(html, "utf8").toString("base64"))}).decode("utf-8")
-file_path = ${pythonString(filePath)}
-tab = new_tab("about:blank")
-try:
-    js("document.open(); document.write(" + json.dumps(html) + "); document.close();")
-    wait_for_load(5)
-    wait(0.5)
-    cdp("Emulation.setEmulatedMedia", media="print")
-    pdf = cdp(
-        "Page.printToPDF",
-        printBackground=True,
-        paperWidth=8.27,
-        paperHeight=11.69,
-        marginTop=0.2,
-        marginRight=0.2,
-        marginBottom=0.2,
-        marginLeft=0.2,
-    )
-    open(file_path, "wb").write(base64.b64decode(pdf["data"]))
-    print(${pythonString(RESULT_PREFIX)} + json.dumps({"ok": True, "path": file_path}))
-finally:
-    try:
-        cdp("Target.closeTarget", targetId=tab)
-    except Exception:
-        pass
-`;
-  await runBrowserHarness(script, {
-    timeoutMs: options.pdfTimeoutMs || DEFAULT_TIMEOUT_MS,
-  });
-}
-
 export async function openLoginWithBrowserHarness(url = "https://x.com/login") {
   const script = `new_tab(${pythonString(url)})\n`;
   await runBrowserHarness(script, {

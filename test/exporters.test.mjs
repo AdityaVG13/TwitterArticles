@@ -80,17 +80,19 @@ test("zipFiles bundles generated files", async () => {
   }
 });
 
-test(
-  "saveArticleFiles can write pdf when enabled",
-  { skip: process.env.XAD_TEST_PDF !== "1" },
-  async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "xad-"));
-    try {
-      const files = await saveArticleFiles(article, ["pdf"], dir);
-      assert.equal(files.length, 1);
-      assert(files[0].bytes > 1000);
-    } finally {
-      await rm(dir, { recursive: true, force: true });
-    }
+test("saveArticleFiles writes pdf via pure-JS renderer", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "xad-"));
+  try {
+    const files = await saveArticleFiles(article, ["pdf"], dir);
+    assert.equal(files.length, 1);
+    assert.equal(
+      files[0].name,
+      "Useful X Article - Example Author.pdf"
+    );
+    assert(files[0].bytes > 1000);
+    const head = await readFile(files[0].path);
+    assert.equal(head.subarray(0, 4).toString(), "%PDF");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
   }
-);
+});

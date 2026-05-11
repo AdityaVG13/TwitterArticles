@@ -385,7 +385,6 @@ npm run build:icons
 Optional checks:
 
 ```sh
-npm run test:pdf                   # PDF exporter smoke test
 npm run security:scan              # local artifact scan
 VIRUSTOTAL_API_KEY=... npm run security:virustotal
 ```

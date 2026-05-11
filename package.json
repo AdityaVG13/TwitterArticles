@@ -38,7 +38,6 @@
     "format:check": "prettier --check .",
     "check": "node scripts/check.mjs",
     "test": "node --test test/*.test.mjs",
-    "test:pdf": "XAD_TEST_PDF=1 node --test test/exporters.test.mjs",
     "audit": "npm audit --omit=dev --audit-level=high",
     "security:scan": "bash scripts/security-scan.sh",
     "security:virustotal": "node scripts/virustotal-scan.mjs"
@@ -48,6 +47,7 @@
     "docx": "^9.5.1",
     "express": "^4.19.2",
     "jsdom": "^29.1.1",
+    "pdfkit": "^0.15.2",
     "sanitize-filename": "^1.6.3",
     "turndown": "^7.2.0",
     "yazl": "^3.3.1"

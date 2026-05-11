@@ -3,9 +3,9 @@ import { mkdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import * as docx from "docx";
 import { JSDOM } from "jsdom";
+import PDFDocument from "pdfkit";
 import TurndownService from "turndown";
 import yazl from "yazl";
-import { writeHtmlPdfWithBrowserHarness } from "./browser-harness.mjs";
 import { fileStemForArticle } from "./url.mjs";
 
 const { Document, HeadingLevel, Packer, Paragraph, TextRun } = docx;
@@ -40,75 +40,6 @@ export function renderMarkdown(article) {
   ].filter(Boolean);
 
   return [`# ${article.title}`, "", ...meta, "", body, ""].join("\n");
-}
-
-export function renderHtmlDocument(article) {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>${escapeHtml(article.title)}</title>
-  <style>
-    :root { color-scheme: light; }
-    body {
-      margin: 0;
-      color: #17201b;
-      background: #ffffff;
-      font: 16px/1.65 ui-serif, Georgia, "Times New Roman", serif;
-    }
-    main {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 48px 42px;
-    }
-    h1, h2, h3 {
-      color: #111713;
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.18;
-      letter-spacing: 0;
-    }
-    h1 { font-size: 34px; margin: 0 0 14px; }
-    h2 { font-size: 24px; margin-top: 34px; }
-    h3 { font-size: 19px; margin-top: 26px; }
-    .meta {
-      margin: 0 0 34px;
-      color: #516057;
-      font: 13px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    a { color: #005f73; overflow-wrap: anywhere; }
-    img, video { max-width: 100%; height: auto; border-radius: 6px; }
-    blockquote {
-      margin-left: 0;
-      padding-left: 18px;
-      border-left: 3px solid #7a9e7e;
-      color: #34443b;
-    }
-    pre, code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.92em;
-    }
-    pre {
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
-      background: #f3f5f2;
-      padding: 14px;
-      border-radius: 6px;
-    }
-    @page { margin: 0.55in; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>${escapeHtml(article.title)}</h1>
-    <p class="meta">
-      Source: <a href="${escapeAttribute(article.sourceUrl)}">${escapeHtml(article.sourceUrl)}</a><br>
-      ${article.byline ? `Byline: ${escapeHtml(article.byline)}<br>` : ""}
-      Downloaded: ${escapeHtml(article.downloadedAt)}
-    </p>
-    ${article.content}
-  </main>
-</body>
-</html>`;
 }
 
 export async function saveArticleFiles(
@@ -165,12 +96,138 @@ async function pathExists(filePath) {
   }
 }
 
-export async function writePdf(article, filePath, options = {}) {
-  await writeHtmlPdfWithBrowserHarness(
-    renderHtmlDocument(article),
-    filePath,
-    options
+export async function writePdf(article, filePath) {
+  const doc = new PDFDocument({
+    size: "A4",
+    margins: { top: 56, bottom: 56, left: 56, right: 56 },
+    info: {
+      Title: article.title,
+      Author: article.byline || "X Article Downloader",
+      Subject: article.excerpt || undefined,
+    },
+  });
+
+  const finished = new Promise((resolve, reject) => {
+    const stream = fs.createWriteStream(filePath);
+    stream.on("finish", resolve);
+    stream.on("error", reject);
+    doc.on("error", reject);
+    doc.pipe(stream);
+  });
+
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(22)
+    .fillColor("#111713")
+    .text(article.title, { lineGap: 4 });
+  doc.moveDown(0.5);
+
+  doc.font("Helvetica").fontSize(10).fillColor("#516057");
+  doc.text("Source: ", { continued: true }).fillColor("#005f73");
+  doc.text(article.sourceUrl, {
+    link: article.sourceUrl,
+    underline: true,
+    lineGap: 2,
+  });
+  doc.fillColor("#516057");
+  if (article.byline) {
+    doc.text(`Byline: ${article.byline}`, { lineGap: 2 });
+  }
+  doc.text(`Downloaded: ${article.downloadedAt}`);
+  doc.moveDown(1.2);
+
+  doc.fillColor("#17201b").font("Helvetica").fontSize(12);
+  renderHtmlIntoPdf(doc, article.content || "");
+
+  doc.end();
+  await finished;
+}
+
+function renderHtmlIntoPdf(doc, html) {
+  const dom = new JSDOM(`<body>${html}</body>`);
+  walkPdfBlocks(doc, dom.window.document.body, { listType: null, index: 0 });
+}
+
+function walkPdfBlocks(doc, node, listState) {
+  for (const child of [...node.children]) {
+    const tag = child.tagName.toLowerCase();
+    if (/^h[1-6]$/.test(tag)) {
+      const size = tag === "h1" ? 18 : tag === "h2" ? 16 : 14;
+      doc.moveDown(0.6);
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(size)
+        .fillColor("#111713")
+        .text(cleanInline(child.textContent), { lineGap: 2 });
+      doc.font("Helvetica").fontSize(12).fillColor("#17201b");
+      doc.moveDown(0.3);
+    } else if (tag === "p") {
+      const text = cleanInline(child.textContent);
+      if (text) {
+        doc.text(text, { lineGap: 2 });
+        doc.moveDown(0.5);
+      }
+    } else if (tag === "blockquote") {
+      const text = cleanInline(child.textContent);
+      if (text) {
+        doc.font("Helvetica-Oblique").fillColor("#34443b");
+        doc.text(text, { indent: 18, lineGap: 2 });
+        doc.font("Helvetica").fillColor("#17201b");
+        doc.moveDown(0.5);
+      }
+    } else if (tag === "pre") {
+      const text = child.textContent || "";
+      if (text.trim()) {
+        doc.font("Courier").fontSize(10).fillColor("#34443b");
+        doc.text(text, { lineGap: 1.5 });
+        doc.font("Helvetica").fontSize(12).fillColor("#17201b");
+        doc.moveDown(0.5);
+      }
+    } else if (tag === "ul" || tag === "ol") {
+      walkPdfBlocks(doc, child, { listType: tag, index: 0 });
+      doc.moveDown(0.3);
+    } else if (tag === "li") {
+      const text = cleanInline(child.textContent);
+      if (text) {
+        const marker =
+          listState.listType === "ol" ? `${++listState.index}. ` : "• ";
+        doc.text(`${marker}${text}`, { indent: 14, lineGap: 2 });
+      }
+    } else if (tag === "img") {
+      const src = child.getAttribute("src");
+      const alt = child.getAttribute("alt") || "Image";
+      if (src) {
+        doc.font("Helvetica-Oblique").fontSize(10).fillColor("#516057");
+        doc.text(`${alt}: ${src}`, {
+          link: src,
+          underline: true,
+          lineGap: 1.5,
+        });
+        doc.font("Helvetica").fontSize(12).fillColor("#17201b");
+        doc.moveDown(0.4);
+      }
+    } else if (hasPdfBlockChild(child)) {
+      walkPdfBlocks(doc, child, listState);
+    } else {
+      const text = cleanInline(child.textContent);
+      if (text) {
+        doc.text(text, { lineGap: 2 });
+        doc.moveDown(0.4);
+      }
+    }
+  }
+}
+
+function hasPdfBlockChild(node) {
+  return Boolean(
+    node.querySelector("h1,h2,h3,h4,h5,h6,p,ul,ol,li,blockquote,pre,img")
   );
+}
+
+function cleanInline(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export async function writeDocx(article, filePath) {
@@ -315,14 +372,3 @@ export async function zipFiles(files, zipPath) {
   };
 }
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function escapeAttribute(value) {
-  return escapeHtml(value).replace(/'/g, "&#39;");
-}
