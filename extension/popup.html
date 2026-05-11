@@ -22,6 +22,25 @@
 
       <section id="singleView" hidden>
         <p class="hint">Capture the current X Article tab.</p>
+
+        <div>
+          <p class="section-label">Format</p>
+          <div class="chips" role="group" aria-label="Export formats">
+            <label class="chip" data-format="md">
+              <input type="checkbox" name="formats" value="md" />
+              <span>Markdown</span>
+            </label>
+            <label class="chip" data-format="pdf">
+              <input type="checkbox" name="formats" value="pdf" />
+              <span>PDF</span>
+            </label>
+            <label class="chip" data-format="docx">
+              <input type="checkbox" name="formats" value="docx" />
+              <span>DOCX</span>
+            </label>
+          </div>
+        </div>
+
         <button type="button" id="captureSingleBtn" class="primary full">
           Capture this tab
         </button>

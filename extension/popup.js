@@ -12,7 +12,7 @@ const queueList = document.querySelector("#queueList");
 const queueCount = document.querySelector("#queueCount");
 const statusEl = document.querySelector("#status");
 const openOptions = document.querySelector("#openOptions");
-const formatChips = batchView.querySelectorAll(".chip");
+const formatChips = document.querySelectorAll(".chip");
 
 const stored = await chrome.storage.sync.get(DEFAULT_OPTIONS);
 let captureMode = stored.captureMode || DEFAULT_OPTIONS.captureMode;
@@ -26,7 +26,7 @@ for (const chip of formatChips) {
   input.checked = initialFormats.includes(input.value);
   syncChipState(chip);
   input.addEventListener("change", () => {
-    syncChipState(chip);
+    mirrorChip(chip);
     saveFormats();
   });
 }
@@ -152,6 +152,22 @@ function syncChipState(chip) {
   chip.classList.toggle("is-active", input.checked);
 }
 
+function mirrorChip(sourceChip) {
+  const value = sourceChip.querySelector("input").value;
+  const checked = sourceChip.querySelector("input").checked;
+  for (const chip of formatChips) {
+    if (chip === sourceChip) {
+      syncChipState(chip);
+      continue;
+    }
+    const input = chip.querySelector("input");
+    if (input.value === value && input.checked !== checked) {
+      input.checked = checked;
+      syncChipState(chip);
+    }
+  }
+}
+
 function extractAuthor(url) {
   if (!url) return "";
   try {
@@ -163,10 +179,14 @@ function extractAuthor(url) {
 }
 
 async function saveFormats() {
-  const formats = [...formatChips]
-    .map((chip) => chip.querySelector("input"))
-    .filter((input) => input.checked)
-    .map((input) => input.value);
+  const formats = [
+    ...new Set(
+      [...formatChips]
+        .map((chip) => chip.querySelector("input"))
+        .filter((input) => input.checked)
+        .map((input) => input.value)
+    ),
+  ];
   if (formats.length) {
     await chrome.storage.sync.set({ formats });
   }
