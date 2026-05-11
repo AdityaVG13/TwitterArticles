@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 408 612" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, sans-serif">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f1c17" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+  <rect width="408" height="612" fill="#d8ded7"/>
+  <rect x="24" y="24" width="360" height="564" rx="10" fill="#f4f6f3" filter="url(#shadow)"/>
+
+  <!-- Title -->
+  <text x="40" y="56" font-size="14" font-weight="700" fill="#1a221d">X Article Downloader</text>
+
+  <!-- Mode toggle -->
+  <rect x="40" y="68" width="328" height="34" rx="8" fill="#eef1ec" stroke="#d8ded7"/>
+  <text x="123.5" y="89" text-anchor="middle" font-size="12" font-weight="600" fill="#62706a">Single</text>
+  <rect x="205" y="71" width="161" height="28" rx="6" fill="#ffffff"/>
+  <text x="285.5" y="89" text-anchor="middle" font-size="12" font-weight="600" fill="#044e5c">Batch</text>
+
+  <!-- Add tab row -->
+  <rect x="40" y="124" width="120" height="32" rx="8" fill="#ffffff" stroke="#c4ccc2"/>
+  <text x="100" y="145" text-anchor="middle" font-size="13" font-weight="600" fill="#1a221d">Add this tab</text>
+  <text x="368" y="145" text-anchor="end" font-size="12" fill="#62706a">3 in queue</text>
+
+  <!-- Queue list -->
+  <rect x="40" y="172" width="328" height="158" rx="8" fill="#ffffff" stroke="#d8ded7"/>
+
+  <g>
+    <text x="56" y="196" font-size="12.5" font-weight="600" fill="#1a221d">Why agents will eat the IDE</text>
+    <text x="56" y="212" font-size="11" fill="#62706a">@balajis</text>
+    <text x="350" y="206" text-anchor="end" font-size="18" fill="#62706a">×</text>
+    <line x1="48" y1="226" x2="360" y2="226" stroke="#eef1ec"/>
+  </g>
+
+  <g>
+    <text x="56" y="246" font-size="12.5" font-weight="600" fill="#1a221d">Notes on local-first software</text>
+    <text x="56" y="262" font-size="11" fill="#62706a">@inkswitch</text>
+    <text x="350" y="256" text-anchor="end" font-size="18" fill="#62706a">×</text>
+    <line x1="48" y1="276" x2="360" y2="276" stroke="#eef1ec"/>
+  </g>
+
+  <g>
+    <text x="56" y="296" font-size="12.5" font-weight="600" fill="#1a221d">A short essay on quiet UI</text>
+    <text x="56" y="312" font-size="11" fill="#62706a">@rms</text>
+    <text x="350" y="306" text-anchor="end" font-size="18" fill="#62706a">×</text>
+  </g>
+
+  <!-- Format label -->
+  <text x="40" y="358" font-size="11" font-weight="700" fill="#62706a" letter-spacing="0.5">FORMAT</text>
+
+  <!-- Chips -->
+  <g>
+    <rect x="40" y="370" width="86" height="28" rx="14" fill="#d6e5e8" stroke="#056778"/>
+    <text x="83" y="388" text-anchor="middle" font-size="12" font-weight="600" fill="#044e5c">Markdown</text>
+
+    <rect x="132" y="370" width="54" height="28" rx="14" fill="#ffffff" stroke="#c4ccc2"/>
+    <text x="159" y="388" text-anchor="middle" font-size="12" font-weight="600" fill="#1a221d">PDF</text>
+
+    <rect x="192" y="370" width="62" height="28" rx="14" fill="#ffffff" stroke="#c4ccc2"/>
+    <text x="223" y="388" text-anchor="middle" font-size="12" font-weight="600" fill="#1a221d">DOCX</text>
+  </g>
+
+  <!-- Actions: Save (primary, fills) + Clear (ghost) -->
+  <rect x="40" y="418" width="248" height="36" rx="8" fill="#056778" stroke="#056778"/>
+  <text x="164" y="441" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">Save 3 articles as ZIP</text>
+
+  <rect x="296" y="418" width="72" height="36" rx="8" fill="#ffffff" stroke="#c4ccc2"/>
+  <text x="332" y="441" text-anchor="middle" font-size="13" font-weight="600" fill="#1a221d">Clear</text>
+
+  <!-- Divider -->
+  <line x1="40" y1="482" x2="368" y2="482" stroke="#d8ded7"/>
+
+  <!-- Status -->
+  <text x="40" y="506" font-size="12" fill="#044e5c">Saved 3 article(s). ZIP downloaded.</text>
+
+  <!-- Footer -->
+  <text x="40" y="552" font-size="12" fill="#62706a">Local-first. Files stay on your machine.</text>
+  <text x="368" y="552" text-anchor="end" font-size="12" font-weight="600" fill="#056778">Options</text>
+</svg>

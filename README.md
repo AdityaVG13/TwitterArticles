@@ -66,18 +66,33 @@ Files land in `./downloads/` (web UI / CLI) or your browser's default downloads 
 ```text
 Install X Article Downloader from the repository URL I provide.
 
-Use a clean working directory. Detect my OS. Make sure Git, Node.js 20 or
-newer, uv, and Chrome are installed. Clone the repository, run npm install,
-then run npm run doctor.
+Use a clean working directory. Detect my OS. Make sure Git and Node.js 20
+or newer are installed. Clone the repository, run npm install, then
+run npm run doctor.
 
-If Browser Harness is missing, install it from its official repository using
-the README commands, then rerun npm run doctor. After the doctor passes, run
-npm run install-native for Google Chrome. Tell me the extension directory
-printed by the installer and walk me through loading it in chrome://extensions
-with Developer mode enabled.
+Ask me which browsers I use (Chrome, Edge, Brave, Firefox -- any combination).
+For each one I pick:
 
-Do not ask me for secrets. Do not modify the project source. Stop and show
-the exact command output if any step fails.
+  - Chrome / Edge / Brave: run `npm run install-native` (add
+    `-- --browser edge|brave|canary|chromium` for non-default Chromium
+    targets on macOS). Then walk me through loading the unpacked extension
+    from the `extension/` directory at chrome://extensions with Developer
+    mode enabled.
+
+  - Firefox: run `npm run install-native -- --browser firefox`, then run
+    `npm run run:firefox` which auto-launches Firefox with a persisted
+    dev profile and the add-on preloaded. If I'd rather a permanent
+    install, run `npm run package:firefox` and tell me how to drag the
+    resulting .xpi into about:addons on Firefox Developer Edition.
+
+If Browser Harness is missing during `npm run doctor` and I want
+authenticated-page capture (logged-in / gated articles), install it from
+its official repository and rerun the doctor. Skip Browser Harness if I
+only want public articles -- the extension popup and PDF export work
+without it.
+
+Do not ask me for secrets. Do not modify the project source. Stop and
+show the exact command output if any step fails.
 ```
 
 </details>
@@ -210,59 +225,28 @@ npm run uninstall-native -- --browser firefox
 
 Click the toolbar icon to open the popup. Two modes, toggled at the top.
 
+<table>
+<tr>
+<td valign="top" width="50%">
+
 ### Single
 
 Capture the current tab and download it in the configured formats.
 
-```text
-┌──────────────────────────────────────────────────────┐
-│  X Article Downloader                                │
-│                                                      │
-│  ┌─────────────────┐┌─────────────────┐              │
-│  │  ● Single       ││    Batch        │              │
-│  └─────────────────┘└─────────────────┘              │
-│                                                      │
-│  Capture the current X Article tab.                  │
-│                                                      │
-│  ┌─────────────────────┐                             │
-│  │  Capture this tab   │                             │
-│  └─────────────────────┘                             │
-│                                                      │
-│  Saved 1 file.                            Options →  │
-└──────────────────────────────────────────────────────┘
-```
+<img src="docs/screenshots/popup-single.png" alt="Popup in Single mode — Markdown / PDF / DOCX chips with PDF active, Capture this tab button, Saved 1 file status" width="360">
+
+</td>
+<td valign="top" width="50%">
 
 ### Batch
 
 Queue tabs from anywhere in your browser, review them, then download the whole queue as one archive (up to 50 articles).
 
-```text
-┌──────────────────────────────────────────────────────┐
-│  X Article Downloader                                │
-│                                                      │
-│  ┌─────────────────┐┌─────────────────┐              │
-│  │    Single       ││  ● Batch        │              │
-│  └─────────────────┘└─────────────────┘              │
-│                                                      │
-│  ┌─────────────────────┐               3 queued      │
-│  │    Add this tab     │                             │
-│  └─────────────────────┘                             │
-│                                                      │
-│  ┌────────────────────────────────────────────────┐  │
-│  │ Why agents will eat the IDE     @balajis     × │  │
-│  │ Notes on local-first software   @inkswitch   × │  │
-│  │ A short essay on quiet UI       @rms         × │  │
-│  └────────────────────────────────────────────────┘  │
-│                                                      │
-│  Formats   [x] Markdown    [ ] PDF    [ ] DOCX       │
-│                                                      │
-│  ┌──────────────────┐  ┌─────────┐                   │
-│  │   Save to ZIP    │  │  Clear  │                   │
-│  └──────────────────┘  └─────────┘                   │
-│                                                      │
-│  Saved 3 article(s). ZIP downloaded.      Options →  │
-└──────────────────────────────────────────────────────┘
-```
+<img src="docs/screenshots/popup-batch.png" alt="Popup in Batch mode — Add this tab button, 3 queued articles, Markdown chip active, Save 3 articles as ZIP button" width="360">
+
+</td>
+</tr>
+</table>
 
 The toolbar badge shows the queue count while batch mode is active.
 
@@ -376,10 +360,11 @@ npm test                # full suite (60 tests)
 npm run audit           # production deps only
 ```
 
-Icon pipeline (master SVG → 16/32/48/128 PNGs via `@resvg/resvg-js`):
+Icons and popup screenshots (master SVGs → PNGs via `@resvg/resvg-js`):
 
 ```sh
-npm run build:icons
+npm run build:icons         # extension/icons/icon-{16,32,48,128}.png
+npm run build:screenshots   # docs/screenshots/popup-{single,batch}.png
 ```
 
 Optional checks:

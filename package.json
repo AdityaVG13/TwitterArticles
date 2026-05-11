@@ -28,6 +28,7 @@
     "doctor": "node src/doctor.mjs",
     "login": "node src/login.mjs",
     "build:icons": "node scripts/build-icons.mjs",
+    "build:screenshots": "node scripts/build-screenshots.mjs",
     "build:firefox": "node scripts/build-firefox.mjs",
     "package:firefox": "npm run build:firefox && web-ext build --source-dir=extension-firefox --artifacts-dir=dist --overwrite-dest",
     "run:firefox": "npm run build:firefox && web-ext run --source-dir=extension-firefox --keep-profile-changes --profile-create-if-missing --profile=./.xad-browser-profile/firefox",
