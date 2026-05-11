@@ -80,6 +80,27 @@ test("zipFiles bundles generated files", async () => {
   }
 });
 
+test("saveArticleFiles writes pdf when optional fields are missing", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "xad-"));
+  try {
+    const minimal = {
+      title: "Bare Article",
+      sourceUrl: "https://x.com/u/status/1",
+      finalUrl: "https://x.com/u/status/1",
+      downloadedAt: "2026-05-11T00:00:00.000Z",
+      content: "<p>just text</p>",
+      textContent: "just text",
+    };
+    const files = await saveArticleFiles(minimal, ["pdf"], dir);
+    assert.equal(files.length, 1);
+    assert(files[0].bytes > 500);
+    const head = await readFile(files[0].path);
+    assert.equal(head.subarray(0, 4).toString(), "%PDF");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("saveArticleFiles writes pdf via pure-JS renderer", async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), "xad-"));
   try {

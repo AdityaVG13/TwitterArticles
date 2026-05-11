@@ -97,14 +97,19 @@ async function pathExists(filePath) {
 }
 
 export async function writePdf(article, filePath) {
+  const title = String(article.title || "Untitled X Article");
+  const sourceUrl = String(article.sourceUrl || "");
+  const byline = String(article.byline || "");
+  const excerpt = String(article.excerpt || "");
+  const downloadedAt = String(article.downloadedAt || "");
+
+  const info = { Title: title, Author: byline || "X Article Downloader" };
+  if (excerpt) info.Subject = excerpt;
+
   const doc = new PDFDocument({
     size: "A4",
     margins: { top: 56, bottom: 56, left: 56, right: 56 },
-    info: {
-      Title: article.title,
-      Author: article.byline || "X Article Downloader",
-      Subject: article.excerpt || undefined,
-    },
+    info,
   });
 
   const finished = new Promise((resolve, reject) => {
@@ -119,25 +124,25 @@ export async function writePdf(article, filePath) {
     .font("Helvetica-Bold")
     .fontSize(22)
     .fillColor("#111713")
-    .text(article.title, { lineGap: 4 });
+    .text(title, { lineGap: 4 });
   doc.moveDown(0.5);
 
   doc.font("Helvetica").fontSize(10).fillColor("#516057");
-  doc.text("Source: ", { continued: true }).fillColor("#005f73");
-  doc.text(article.sourceUrl, {
-    link: article.sourceUrl,
-    underline: true,
-    lineGap: 2,
-  });
-  doc.fillColor("#516057");
-  if (article.byline) {
-    doc.text(`Byline: ${article.byline}`, { lineGap: 2 });
+  if (sourceUrl) {
+    doc.text("Source: ", { continued: true }).fillColor("#005f73");
+    doc.text(sourceUrl, { link: sourceUrl, underline: true, lineGap: 2 });
+    doc.fillColor("#516057");
   }
-  doc.text(`Downloaded: ${article.downloadedAt}`);
+  if (byline) {
+    doc.text(`Byline: ${byline}`, { lineGap: 2 });
+  }
+  if (downloadedAt) {
+    doc.text(`Downloaded: ${downloadedAt}`);
+  }
   doc.moveDown(1.2);
 
   doc.fillColor("#17201b").font("Helvetica").fontSize(12);
-  renderHtmlIntoPdf(doc, article.content || "");
+  renderHtmlIntoPdf(doc, String(article.content || ""));
 
   doc.end();
   await finished;
