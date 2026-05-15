@@ -47,13 +47,30 @@ export function normalizeSourceUrl(rawUrl, options = {}) {
 }
 
 export function fileStemForArticle(article) {
-  const title = cleanFilePart(article.title || "x-article", 96);
+  const title = cleanFilePart(article.title || "", 96);
   const author = cleanFilePart(
     article.byline ||
       authorFromUrl(article.sourceUrl || article.finalUrl || ""),
     48
   );
-  return [title || "x-article", author].filter(Boolean).join(" - ");
+  const safeTitle = title || fallbackStem(article);
+  return [safeTitle, author].filter(Boolean).join(" - ");
+}
+
+function fallbackStem(article) {
+  const tweetId = tweetIdFromUrl(article.sourceUrl || article.finalUrl || "");
+  return tweetId ? `x-article-${tweetId}` : "x-article";
+}
+
+function tweetIdFromUrl(rawUrl) {
+  try {
+    const segments = new URL(rawUrl).pathname.split("/").filter(Boolean);
+    const statusIndex = segments.indexOf("status");
+    const id = statusIndex >= 0 ? segments[statusIndex + 1] : "";
+    return /^\d{1,32}$/.test(id) ? id : "";
+  } catch {
+    return "";
+  }
 }
 
 export function parseFormats(input) {
@@ -85,11 +102,20 @@ function authorFromUrl(rawUrl) {
   }
 }
 
+const CHROME_FORBIDDEN_RE = /[\\/<>?*|":~]/g;
+const INVISIBLE_RE = new RegExp(
+  "[\\u0000-\\u001F\\u007F\\u200B-\\u200F\\u2028\\u2029\\u202A-\\u202E\\u2066-\\u2069\\uFEFF]",
+  "g"
+);
+const TRIM_EDGE_RE = /^[.\-\s]+|[.\-\s]+$/g;
+
 function cleanFilePart(value, maxLength) {
   return sanitize(String(value || ""))
+    .replace(INVISIBLE_RE, "")
+    .replace(CHROME_FORBIDDEN_RE, "")
     .replace(/\s+/g, " ")
     .replace(/\s+-\s+/g, " - ")
     .trim()
     .slice(0, maxLength)
-    .trim();
+    .replace(TRIM_EDGE_RE, "");
 }
